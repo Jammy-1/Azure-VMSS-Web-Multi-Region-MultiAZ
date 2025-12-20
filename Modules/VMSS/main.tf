@@ -7,6 +7,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "this" {
   sku                 = var.vm_size
   instances           = var.instance_count
   admin_username      = var.vm_admin_username
+  disable_password_authentication = true
+  
   tags                = var.tags
 
   source_image_reference {
@@ -20,7 +22,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "this" {
     username   = var.vm_admin_username
     public_key = var.vm_admin_ssh_key
   }
-
+  
   network_interface {
     name    = "vmss-nic"
     primary = true

@@ -85,7 +85,7 @@ module "vmss" {
 
 
   vm_admin_username = var.vm_admin_username
-  vm_admin_ssh_key  = file(var.ssh_public_key_path)
+  vm_admin_ssh_key  = var.ssh_public_key_path
   instance_count    = var.instance_count
   vm_size           = var.vm_size
 
