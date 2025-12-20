@@ -24,8 +24,8 @@ runcmd:
     ]
 
   # Copy index.html and style.css to the web root
-  - [bash, -c, "cp '/opt/myrepo/Static Site/index.html' /var/www/html/"]
-  - [bash, -c, "cp '/opt/myrepo/Static Site/styles.css' /var/www/html/"]
+  - [bash, -c, "cp '/opt/myrepo/Static-Site/index.html' /var/www/html/"]
+  - [bash, -c, "cp '/opt/myrepo/Static-Site/styles.css' /var/www/html/"]
 
   # Set correct permissions for Apache
   - [
