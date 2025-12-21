@@ -47,7 +47,7 @@ jobs:
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
 
-      # Azure-only TFLint config
+      # Azure TFLint config
       - name: Configure Azure TFLint rules
         run: |
           cat <<EOF > .tflint.hcl
@@ -58,10 +58,11 @@ jobs:
           plugin "azurerm" {
             enabled = true
             source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
+            version = "0.27.0"
           }
           EOF
 
-      # Init
+      # TF Init
       - name: Init TFLint
         run: tflint --init
         env:
