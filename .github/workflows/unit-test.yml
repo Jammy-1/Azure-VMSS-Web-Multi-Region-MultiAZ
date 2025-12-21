@@ -35,8 +35,14 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: List Module Folders
+        run: ls -l
+
+      - name: Check Environment Folder
+        run: ls -l environments/
+
       - name: Terraform Validate
-        run: terraform validate -var-file=environment/staging.tfvars
+        run: terraform validate -var-file=environments/staging.tfvars
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
