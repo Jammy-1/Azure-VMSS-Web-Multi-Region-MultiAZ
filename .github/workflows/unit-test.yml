@@ -39,7 +39,7 @@ jobs:
         run: terraform version
 
       - name: List Module Folders
-        run: ls -l modules/
+        run: ls -l Modules/
 
       - name: Check Environment Folder
         run: ls -l environments/
