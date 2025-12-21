@@ -24,8 +24,8 @@ public_ip_name = "pub-static-lb"
 
 # VM
 vm_admin_username = "azureuser"
-vm_size        = "Standard_B2s"
-instance_count = 2
+vm_size           = "Standard_B2s"
+instance_count    = 2
 
 # GitHub Repo
 github_repo    = "https://github.com/Jammy-1/Azure-VMSS-Web-Multi-Region-MultiAZ"
