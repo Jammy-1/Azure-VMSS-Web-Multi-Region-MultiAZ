@@ -15,6 +15,38 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+        # Setup TFLint
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+
+      # Azure TFLint Config
+      - name: Configure Azure TFLint rules
+        run: |
+          cat <<EOF > .tflint.hcl
+          config { format = "compact" }
+
+          plugin "azurerm" {
+            enabled = true
+            source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
+            version = "0.27.0"
+          }
+
+          rule "terraform_unused_declarations" {
+            enabled = true
+            level   = "WARNING"
+          }
+          EOF
+
+      # TF Init
+      - name: Initialize TFLint
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Run TFLint
+      - name: Run TFLint
+        run: tflint -f compact || true
+
       # Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -46,35 +78,3 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      # Setup TFLint
-      - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v6
-
-      # Azure TFLint Config
-      - name: Configure Azure TFLint rules
-        run: |
-          cat <<EOF > .tflint.hcl
-          config { format = "compact" }
-
-          plugin "azurerm" {
-            enabled = true
-            source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
-            version = "0.27.0"
-          }
-
-          rule "terraform_unused_declarations" {
-            enabled = true
-            level   = "WARNING"
-          }
-          EOF
-
-      # TF Init
-      - name: Initialize TFLint
-        run: tflint --init
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
-      # Run TFLint
-      - name: Run TFLint
-        run: tflint -f compact || true
