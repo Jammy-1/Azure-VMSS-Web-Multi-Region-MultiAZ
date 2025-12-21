@@ -177,5 +177,3 @@ terraform output public_ip
 ```
 
 ### Open http://<public_ip> in your browser to view the site.
-
-Jammy-1 Azure-VMSS-Web-Multi-Region-MultiAZ
