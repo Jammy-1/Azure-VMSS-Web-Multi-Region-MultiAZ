@@ -1,0 +1,62 @@
+name: Terraform Unit Tests
+
+on:
+  push:
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - "**/modules/**"
+    branches: [staging]
+
+  pull_request:
+    branches: [staging]
+
+jobs:
+  terraform-unit:
+    runs-on: ubuntu-latest
+    env:
+      TF_LOG: "ERROR"
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.7
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+
+      - name: Terraform validate
+        run: terraform validate
+
+      # Setup TFLint
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+
+      # Azure-only TFLint config
+      - name: Configure Azure TFLint rules
+        run: |
+          cat <<EOF > .tflint.hcl
+          config {
+            format = "compact"
+          }
+
+          plugin "azurerm" {
+            enabled = true
+            source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
+          }
+          EOF
+
+      # Init
+      - name: Init TFLint
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Run Azure rules
+      - name: Run TFLint Azure Rules
+        run: tflint -f compact
