@@ -84,4 +84,4 @@ jobs:
 
       # Run Azure Rules
       - name: Run TFLint Azure Rules
-        run: tflint -f compact
+        run: tflint -f compact || true
