@@ -10,7 +10,7 @@ tags = {
 
 # VMSS Tags
 vmss_tags = {
-  App = "vmss-static-site"
+  App  = "vmss-static-site"
   tier = "web"
 }
 

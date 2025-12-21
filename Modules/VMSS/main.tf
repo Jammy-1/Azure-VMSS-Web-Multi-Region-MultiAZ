@@ -1,15 +1,15 @@
 # VMSS
 resource "azurerm_linux_virtual_machine_scale_set" "this" {
-  name                = "vmss-web-${var.location}"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  zones               = var.zones
-  sku                 = var.vm_size
-  instances           = var.instance_count
-  admin_username      = var.vm_admin_username
+  name                            = "vmss-web-${var.location}"
+  resource_group_name             = var.resource_group_name
+  location                        = var.location
+  zones                           = var.zones
+  sku                             = var.vm_size
+  instances                       = var.instance_count
+  admin_username                  = var.vm_admin_username
   disable_password_authentication = true
-  
-  tags                = var.tags
+
+  tags = var.tags
 
   source_image_reference {
     publisher = "Canonical"
@@ -22,7 +22,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "this" {
     username   = var.vm_admin_username
     public_key = var.vm_admin_ssh_key
   }
-  
+
   network_interface {
     name    = "vmss-nic"
     primary = true

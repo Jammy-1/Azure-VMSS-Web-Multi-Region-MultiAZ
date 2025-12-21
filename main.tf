@@ -46,7 +46,7 @@ locals {
     for r in module.regions.regions :
     r if r.name == local.primary_region.paired_region_name
   ][0], null)
-  
+
   deploy_regions = (
     local.paired_region == null ?
     [local.primary_region] :
