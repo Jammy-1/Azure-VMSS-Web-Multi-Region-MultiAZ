@@ -23,6 +23,7 @@ subnet_prefix      = "10.0.1.0/24"
 public_ip_name = "pub-static-lb"
 
 # VM
+vm_admin_username = "azureuser"
 vm_size        = "Standard_B2s"
 instance_count = 2
 
