@@ -1,6 +1,6 @@
 # Resource Group
 module "rg" {
-  source   = "./modules/resource-group"
+  source   = "./Modules/Resource-Group"
   name     = var.resource_group_name
   location = var.location
   tags     = var.tags
@@ -8,7 +8,7 @@ module "rg" {
 
 # Network
 module "network" {
-  source   = "./modules/network"
+  source   = "./Modules/Network"
   for_each = { for r in local.deploy_regions : r.name => r }
 
   resource_group_name = module.rg.name
@@ -21,7 +21,7 @@ module "network" {
 
 # Load Balancer
 module "lb" {
-  source   = "./modules/load-balancer"
+  source   = "./Modules/Load-Balancer"
   for_each = { for r in local.deploy_regions : r.name => r }
 
   resource_group_name = module.rg.name
@@ -46,7 +46,7 @@ locals {
     for r in module.regions.regions :
     r if r.name == local.primary_region.paired_region_name
   ][0], null)
-
+  
   deploy_regions = (
     local.paired_region == null ?
     [local.primary_region] :
@@ -72,7 +72,7 @@ locals {
 
 # VMSS
 module "vmss" {
-  source              = "./modules/vmss"
+  source              = "./Modules/VMSS"
   resource_group_name = module.rg.name
   tags                = var.vmss_tags
   for_each            = { for r in local.deploy_regions : r.name => r }
