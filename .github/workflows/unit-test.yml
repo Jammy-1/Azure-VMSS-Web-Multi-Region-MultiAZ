@@ -30,7 +30,7 @@ jobs:
           terraform_version: latest
 
       - name: Terraform FMT
-        run: terraform fmt -check - -recursive
+        run: terraform fmt -check -recursive
 
       - name: Terraform Init
         run: terraform init
