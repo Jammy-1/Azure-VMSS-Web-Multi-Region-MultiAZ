@@ -14,13 +14,13 @@ on:
     branches: [staging]
 
 jobs:
-  terraform-unit:
+  Terraform-Unit-Test:
     runs-on: ubuntu-latest
     env:
       TF_LOG: "ERROR"
 
     steps:
-      - name: Checkout source
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
       # Terraform
@@ -32,17 +32,17 @@ jobs:
       - name: Terraform FMT
         run: terraform fmt -check -recursive
 
-      - name: Terraform Init
+      - name: Initialize Terraform
         run: terraform init
 
-      - name: Terraform version
+      - name: Terraform Version
         run: terraform version
 
       - name: List Module Folders
         run: ls -l Modules/
 
-      - name: Check Environment Folder
-        run: ls -l environments/
+      - name: Check Environments Folder
+        run: ls -l environments/staging.tfvars
 
       - name: Terraform Validate
         run: terraform validate
@@ -57,7 +57,7 @@ jobs:
         uses: terraform-linters/setup-tflint@v6
 
       # Azure TFLint config
-      - name: Configure Azure TFLint rules
+      - name: Configure Azure TFLint Rules
         run: |
           cat <<EOF > .tflint.hcl
           config {
@@ -77,11 +77,11 @@ jobs:
           EOF
 
       # TF Init
-      - name: Init TFLint
+      - name: Initialize TFLint
         run: tflint --init
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      # Run Azure Rules
-      - name: Run TFLint Azure Rules
+      # Run RFLint
+      - name: Run TFLint
         run: tflint -f compact || true
