@@ -5,13 +5,13 @@ resource "azurerm_storage_account" "this" {
   location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  
+
   https_traffic_only_enabled = true
   min_tls_version            = "TLS1_2"
 
-  shared_access_key_enabled = "true"
+  shared_access_key_enabled     = "true"
   public_network_access_enabled = "true"
-  
+
 
   blob_properties {
     delete_retention_policy {
