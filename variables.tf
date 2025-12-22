@@ -3,9 +3,6 @@ variable "resource_group_name" { type = string }
 variable "location" { type = string }
 variable "tags" { type = map(string) }
 
-# Storage
-variable "storage_name" { type = string }
-
 # VMSS Tags
 variable "vmss_tags" { type = map(string) }
 
