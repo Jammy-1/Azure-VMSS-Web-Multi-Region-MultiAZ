@@ -14,6 +14,9 @@ vmss_tags = {
   tier = "web"
 }
 
+# Storage 
+storage_account_name = "tf-state-storage-ss"
+
 # VNet
 vnet_name          = "vnet-static"
 vnet_address_space = ["10.0.0.0/16"]
