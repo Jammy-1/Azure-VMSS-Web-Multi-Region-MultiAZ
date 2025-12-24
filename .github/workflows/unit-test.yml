@@ -23,9 +23,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Terraform Version
-        run: terraform version
-
       - name: List Module Folders
         run: ls -l Modules/
 
@@ -37,6 +34,9 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: latest
+
+      - name: Terraform Version
+        run: terraform version
 
       - name: Terraform FMT
         run: terraform fmt -check -recursive
