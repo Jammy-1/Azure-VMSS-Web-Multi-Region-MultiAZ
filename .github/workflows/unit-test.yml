@@ -8,10 +8,10 @@ on:
       - "**/modules/**"
       - ".github/workflows/**"
       - "**/*.md"
-    branches: [staging]
+    branches: [dev]
 
   pull_request:
-    branches: [staging]
+    branches: [dev]
 
 jobs:
   Terraform-Unit-Test:
@@ -22,6 +22,15 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      - name: Terraform Version
+        run: terraform version
+
+      - name: List Module Folders
+        run: ls -l Modules/
+
+      - name: Check Environments Folder
+        run: ls -l environments/staging.tfvars
 
       # Terraform
       - name: Setup Terraform
@@ -34,15 +43,6 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-
-      - name: Terraform Version
-        run: terraform version
-
-      - name: List Module Folders
-        run: ls -l Modules/
-
-      - name: Check Environments Folder
-        run: ls -l environments/staging.tfvars
 
       - name: Terraform Validate
         run: terraform validate
