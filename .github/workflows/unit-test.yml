@@ -26,9 +26,6 @@ jobs:
       - name: List Module Folders
         run: ls -l Modules/
 
-      - name: Check Environments Folder
-        run: ls -l environments/staging.tfvars
-
       # Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
