@@ -1,6 +1,6 @@
 # Storage Account
 resource "azurerm_storage_account" "this" {
-  name                     = var.storage_name
+  name                     = var.storage_account_name
   resource_group_name      = var.resource_group_name
   location                 = var.location
   account_tier             = "Standard"
@@ -33,8 +33,8 @@ resource "azurerm_storage_container" "this" {
 # State Key
 resource "azurerm_storage_blob" "this" {
   name                   = var.state_key
-  storage_account_name   = azurerm_storage_account.this.name
-  storage_container_name = azurerm_storage_container.this.name
+  storage_account_name   = var.storage_account_name
+  storage_container_name = var.storage_container_name
   type                   = "Block"
   source_content         = ""
 }
