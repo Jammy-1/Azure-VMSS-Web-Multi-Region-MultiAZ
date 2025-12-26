@@ -1,4 +1,4 @@
-resource_group_name  = "Azure-VMSS-Web-Multi-Region-MultiAZ"
+resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
 location            = "uksouth"
 
 storage_account_name = "tfstatestorage"
