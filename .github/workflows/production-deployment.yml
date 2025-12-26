@@ -1,0 +1,90 @@
+name: Terraform Production Deployment
+on:
+  workflow_run:
+    workflows:
+      - "Terraform Backend Check"
+      - "Terraform Backend Bootstrap"
+    types:
+      - completed
+
+jobs:
+  Terraform-Production-Deployment:
+    # Run If Either Succeed
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.name == 'Terraform Backend Check' ||
+       github.event.workflow_run.name == 'Terraform Backend Bootstrap')
+
+    name: Create Terraform State Storage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: List Module Folders
+        run: ls -l Modules/
+
+      - name: Confirm Backend Variables
+        run: ls -l environments/backend.tfvars
+
+      - name: Confirm Production Variables
+        run: ls -l environments/production.tfvars
+
+      # Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      # Load Backend Variables From enviroment/backend.tfvars
+      - name: Load Backend Variables
+        id: load-backend-vars
+        run: |
+          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+
+          echo "RG_NAME=$RG" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+
+      # Terraform Init Remote Backend
+      - name: Initialize Terraform With Backend
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ env.RG_NAME }}" \
+            -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+            -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
+            -backend-config="key=${{ env.STATE_KEY }}" \
+            -backend-config="sas_token=${{ secrets.AZURE_SAS_TOKEN }}" \
+            -reconfigure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+        # Terraform Version
+      - name: Terraform Version
+        run: terraform version
+
+      # Terraform Plan
+      - name: Production Terraform Plan
+        run: terraform plan -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # Terraform Apply
+      - name: Production Terraform Apply
+        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
