@@ -1,5 +1,5 @@
 # General
-resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
+name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
 location            = "uksouth"
 
 tags = {
