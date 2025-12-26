@@ -30,3 +30,11 @@ resource "azurerm_storage_container" "this" {
   container_access_type = "private"
 }
 
+# State Key
+resource "azurerm_storage_blob" "this" {
+  name                   = var.state_key
+  storage_account_name   = azurerm_storage_account.this.name
+  storage_container_name = azurerm_storage_container.this.name
+  type                   = "Block"
+  source_content         = "" 
+}
