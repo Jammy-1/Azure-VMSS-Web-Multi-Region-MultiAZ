@@ -54,7 +54,7 @@ jobs:
       # Terraform Plan - Resource Group
       - name: Terraform Plan Resource Group
         working-directory: Modules/Resource-Group
-        run: terraform plan -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform plan -var-file=../../environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -64,7 +64,7 @@ jobs:
       # Terraform Apply - Resource Group
       - name: Terraform Apply
         working-directory: Modules/Resource-Group
-        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform apply -auto-approve -var-file=../../environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -74,7 +74,7 @@ jobs:
       # Terraform Plan - Storage
       - name: Terraform Plan Storage
         working-directory: Modules/Storage
-        run: terraform plan -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform plan -var-file=../../environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -84,7 +84,7 @@ jobs:
       # Terraform Apply - Storage
       - name: Terraform Apply
         working-directory: Modules/Storage
-        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform apply -auto-approve -var-file=../../environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
