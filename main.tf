@@ -17,7 +17,7 @@ module "network" {
   source   = "./Modules/Network"
   for_each = { for r in local.deploy_regions : r.name => r }
 
-  resource_group_name = module.rg.name
+  resource_group_name = var.resource_group_name
   location            = each.value.name
   vnet_name           = "vnet-${each.key}"
   address_space       = var.vnet_address_space
@@ -30,7 +30,7 @@ module "lb" {
   source   = "./Modules/Load-Balancer"
   for_each = { for r in local.deploy_regions : r.name => r }
 
-  resource_group_name = module.rg.name
+  resource_group_name = var.resource_group_name
   location            = each.value.name
   public_ip_name      = "public-lb-${each.key}"
   lb_name             = "web-lb-${each.key}"
@@ -79,7 +79,7 @@ locals {
 # VMSS
 module "vmss" {
   source              = "./Modules/VMSS"
-  resource_group_name = module.rg.name
+  resource_group_name = var.resource_group_name
   tags                = var.vmss_tags
   for_each            = { for r in local.deploy_regions : r.name => r }
 
