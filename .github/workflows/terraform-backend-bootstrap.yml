@@ -23,6 +23,18 @@ jobs:
       - name: Confirm Environments File
         run: ls -l environments/production.tfvars
 
+      - name: Clean Terraform Cache - Resource Group
+        working-directory: Modules/Resource-Group
+        run: |
+          find . -name ".terraform" -type d -exec rm -rf {} +
+          rm -f .terraform.lock.hcl tfplan
+
+      - name: Clean Terraform Cache - Storage
+        working-directory: Modules/Storage
+        run: |
+          find . -name ".terraform" -type d -exec rm -rf {} +
+          rm -f .terraform.lock.hcl tfplan
+
       # Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
