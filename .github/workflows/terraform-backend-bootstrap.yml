@@ -62,9 +62,9 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # Terraform Apply - Resource Group
-      - name: Terraform Apply
+      - name: Terraform Apply Resource Group
         working-directory: Modules/Resource-Group
-        run: terraform apply -auto-approve -var-file=../../environments/backend.tfvars -out=tfplan
+        run: terraform apply -auto-approve -var-file=../../environments/backend.tfvars
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -82,9 +82,9 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # Terraform Apply - Storage
-      - name: Terraform Apply
+      - name: Terraform Apply Storage
         working-directory: Modules/Storage
-        run: terraform apply -auto-approve -var-file=../../environments/backend.tfvars -out=tfplan
+        run: terraform apply -auto-approve -var-file=../../environments/backend.tfvars
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
