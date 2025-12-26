@@ -35,9 +35,11 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
+      # Terraform Version
       - name: Terraform Version
         run: terraform version
 
+      # Terraform Plan
       - name: Terraform Staging Plan
         run: terraform plan -var-file=environments/staging.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
