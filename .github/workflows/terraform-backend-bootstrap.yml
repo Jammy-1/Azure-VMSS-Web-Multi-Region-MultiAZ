@@ -1,0 +1,211 @@
+name: Terraform Backend Bootstrap
+on:
+  workflow_run:
+    workflows: ["Terraform Backend Check"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  backend-bootstrap:
+    # Run Only If Backend Check Failed
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+
+    name: Create Terraform State Storage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: List Module Folders
+        run: ls -l Modules/
+
+      - name: Confirm Environments File
+        run: ls -l environments/production.tfvars
+
+      # Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      # Terraform init
+      - name: Initialize Terraform
+        run: terraform init
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Terraform Version
+        run: terraform version
+
+      # Terraform Init - Resource Group
+      - name: Initialize Resource Group
+        working-directory: Modules/Resource-Group
+        run: terraform init
+
+      # Terraform Init - Storage
+      - name: Initialize Storage Module
+        working-directory: Modules/Storage
+        run: terraform init
+
+      # Terraform Plan - Resource Group
+      - name: Terraform Plan Resource Group
+        working-directory: Modules/Resource-Group
+        run: terraform plan -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # Terraform Apply - Resource Group
+      - name: Terraform Apply
+        working-directory: Modules/Resource-Group
+        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # Terraform Plan - Storage
+      - name: Terraform Plan Storage
+        working-directory: Modules/Storage
+        run: terraform plan -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # Terraform Apply - Storage
+      - name: Terraform Apply
+        working-directory: Modules/Storage
+        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+  confirm-or-add-sas-token:
+    name: SAS Token
+    runs-on: ubuntu-latest
+    needs: backend-bootstrap
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      # Load Storage Account and Container Info
+      - name: Load Storage Variables
+        id: load-storage-vars
+        run: |
+          RG=$(grep -E '^rg_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^storage_container_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          echo "RG_NAME=$RG" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+
+      # Check if SAS Secret Exists In GitHub
+      - name: Check If SAS Secret Exists
+        id: check_sas
+        run: |
+          $secretExists = gh secret list --repo "user/repo" | Select-String -Pattern "AZURE_SAS_TOKEN"
+          if ($secretExists) {
+              Write-Host "Secret Found"
+              echo "sas_missing=false" >> $GITHUB_OUTPUT
+          } else {
+              Write-Host "Secret Missing"
+              echo "sas_missing=true" >> $GITHUB_OUTPUT
+          }
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Generate SAS Token If Missing
+      - name: Generate SAS Token If Missing
+        if: steps.check_sas.outputs.sas_missing == 'true'
+        id: generate_sas
+        run: |
+          ./Modules/Scripts/auto-add-sas-token.ps1 `
+            -Repo "user/repo" `
+            -SecretName "AZURE_SAS_TOKEN" `
+            -StorageAccount $env:STORAGE_ACCOUNT_NAME `
+            -ContainerName $env:STORAGE_CONTAINER_NAME
+        shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Make SAS Token Available For Workflow
+      - name: Use SAS Token in Workflow
+        run: |
+          Write-Host "SAS Token Available For Workflow"
+        env:
+          AZURE_SAS_TOKEN: ${{ steps.generate_sas.outputs.sas_token }}
+
+  migrate-local-state:
+    name: Migrate Current Local State to Remote Backend
+    runs-on: ubuntu-latest
+    needs: confirm-or-add-sas-token
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+        # Confirm ENV
+      - name: Confirm Environments File
+        run: ls -l environments/production.tfvars
+
+        # Load Production Variables
+      - name: Load Production Variables
+        id: load-vars
+        run: |
+          RG=$(grep -E '^rg_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^storage_container_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          echo "RG_NAME=$RG" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+
+        # Terraform Init - Backend
+      - name: Initialize Terraform With Backend Migration
+        run: |
+          terraform init \
+          -backend-config="resource_group_name=${{ env.RG_NAME }}" \
+          -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
+          -backend-config="key=${{ env.STATE_KEY }}" \
+          -backend-config="sas_token=${{ secrets.AZURE_SAS_TOKEN }}" \
+          -migrate-state
+
+      - name: Production Terraform Plan
+        run: terraform plan -out=tfplan -var-file=environments/production.tfvars
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Production Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
