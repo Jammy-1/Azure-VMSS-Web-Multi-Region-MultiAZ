@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Confirm Environments File
-        run: ls -l environments/staging.tfvars
+        run: ls -l environments/backend.tfvars
 
       - name: Azure Login
         uses: azure/login@v1
@@ -35,7 +35,7 @@ jobs:
         run: |
           set -e
 
-          # Load Variables From Production tfvars
+          # Load Variables From Backend tfvars
           RG=$(grep '^backend_rg_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
           SA=$(grep '^backend_storage_account_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
           CONTAINER=$(grep '^storage_container_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
