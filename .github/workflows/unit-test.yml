@@ -32,15 +32,19 @@ jobs:
         with:
           terraform_version: latest
 
+        # TF Version
       - name: Terraform Version
         run: terraform version
 
+        # Format
       - name: Terraform FMT
         run: terraform fmt -check -recursive
 
+        # Initialize Terraform Without Backend
       - name: Initialize Terraform
         run: terraform init -backend=false
 
+        # Validation
       - name: Terraform Validate
         run: terraform validate
 
