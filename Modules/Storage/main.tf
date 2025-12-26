@@ -37,4 +37,9 @@ resource "azurerm_storage_blob" "this" {
   storage_container_name = var.storage_container_name
   type                   = "Block"
   source_content         = ""
+   
+  depends_on = [
+    azurerm_storage_account.this,
+    azurerm_storage_container.this
+  ]
 }
