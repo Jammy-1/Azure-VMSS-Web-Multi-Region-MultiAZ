@@ -55,6 +55,3 @@ if ($secretExists) {
     gh secret set $SecretName --repo $Repo --body ($sasToken.Trim())
     Write-Host "SAS Token Uploaded To GitHub Secrets Successfully"
 }
-
-# Output SAS Token For workflow
-Write-Host "::set-output name=sas_token::$sasToken"
