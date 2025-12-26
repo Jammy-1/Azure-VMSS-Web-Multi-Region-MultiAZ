@@ -28,7 +28,7 @@ jobs:
 
       # Terraform init
       - name: Initialize Terraform
-        run: terraform init
+        run: terraform init -backend=false
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
