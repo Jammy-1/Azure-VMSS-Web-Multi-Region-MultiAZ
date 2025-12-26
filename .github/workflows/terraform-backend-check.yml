@@ -1,0 +1,86 @@
+name: Terraform Backend Check
+
+on:
+  workflow_run:
+    workflows: ["Terraform Staging Plan Validation"]
+    types:
+      - completed
+  push:
+    branches: [main]
+
+jobs:
+  backend-check:
+    if: >
+      github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Confirm Environments File
+        run: ls -l environments/staging.tfvars
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Checking Backend Storage / Container /  Key
+      - name: Check Backend Storage
+        id: check
+        run: |
+          set -e
+
+          # Load Variables From Production tfvars
+          RG=$(grep '^backend_rg_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
+          SA=$(grep '^backend_storage_account_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
+          CONTAINER=$(grep '^storage_container_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
+          KEY=$(grep '^state_key' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
+
+          echo "Checking Backend:"
+          echo "  RG        : $RG"
+          echo "  SA        : $SA"
+          echo "  Container : $CONTAINER"
+          echo "  Key       : $KEY"
+
+          # Check Storage Account
+          if ! az storage account show \
+            --name "$SA" \
+            --resource-group "$RG" \
+            --output none 2>/dev/null; then
+            echo "Storage Account Does Not Exist"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check Container
+          if ! az storage container show \
+            --name "$CONTAINER" \
+            --account-name "$SA" \
+            --auth-mode login \
+            --output none 2>/dev/null; then
+            echo "Storage Container Does Not Exist"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check If State Key Exists
+          if ! az storage blob exists \
+            --container-name "$CONTAINER" \
+            --name "$KEY" \
+            --account-name "$SA" \
+            --auth-mode login \
+            --output tsv | grep -q true; then
+            echo "State key '$KEY' does not exist in container '$CONTAINER'"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "Backend Found and Key Exists"
+          echo "exists=true" >> $GITHUB_OUTPUT
+          exit 0
+        shell: bash
