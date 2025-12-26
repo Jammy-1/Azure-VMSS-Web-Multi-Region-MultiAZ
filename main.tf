@@ -1,8 +1,5 @@
 terraform {
-  backend "azurerm" {
-    container_name = "tfstate"
-    key            = "terraform.tfstate"
-  }
+  backend "azurerm" {}
 }
 
 # Resource Group - Created With Backend BootStrap
