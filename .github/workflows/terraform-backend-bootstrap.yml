@@ -152,10 +152,12 @@ jobs:
           az role assignment create \
             --assignee ${{ secrets.AZURE_CLIENT_ID }} \
             --role "Storage Blob Data Contributor" \
-            --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
+            --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }} \
+            >/dev/null 2>&1
+          echo "Role 'Storage Blob Data Contributor' assigned to SP successfully."
 
       - name: Wait for RBAC
-        run: sleep 30
+        run: sleep 15
 
   add-sas-token:
     name: SAS Token
@@ -191,7 +193,16 @@ jobs:
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
 
-      # Generate SAS Token If Missing
+        # Azure Authentication
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        # Generate SAS Token If Missing
       - name: Generate SAS Token
         id: generate_sas
         shell: pwsh
@@ -203,16 +214,12 @@ jobs:
             -ContainerName "${{ env.STORAGE_CONTAINER_NAME }}"
 
           if (-not $sas) {
-            Write-Error "SAS token generation failed"
+            Write-Error "SAS Token Generation Failed"
             exit 1
           }
             
           echo "sas_token=$sas" >> $env:GITHUB_OUTPUT
         env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   migrate-local-state:
@@ -244,10 +251,22 @@ jobs:
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
+          KEY="${KEY//$'\r'/}"
+
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+
+        # Confirm Backend Variables
+      - name: Confirm Backend Variables
+        run: |
+          echo "resource_group_name=$RG_NAME"
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
+          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
 
         # Terraform Init - Resource-Group - Migrate State
       - name: Initialize Terraform - Resource-Group - Migrate State
@@ -286,6 +305,11 @@ jobs:
           SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
+          KEY="${KEY//$'\r'/}"
 
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
