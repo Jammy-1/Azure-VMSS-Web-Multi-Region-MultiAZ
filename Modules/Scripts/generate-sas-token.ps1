@@ -1,6 +1,4 @@
 param(
-    [string]$Repo,
-    [string]$SecretName,
     [string]$StorageAccount,
     [string]$ContainerName
 )
@@ -47,12 +45,4 @@ if (-not $sasToken) { throw "Failed To Generate SAS token" }
 
 Write-Host "SAS Token Generated Successfully"
 
-# Upload SAS Token to GitHub
-$secretExists = gh secret list --repo $Repo | Select-String -Pattern $SecretName
-
-if ($secretExists) {
-    Write-Host "Secret '$SecretName' Already Exists. Skipping Upload."
-} else {
-    gh secret set $SecretName --repo $Repo --body ($sasToken.Trim())
-    Write-Host "SAS Token Uploaded To GitHub Secrets Successfully"
-}
+return $sasToken.Trim()
