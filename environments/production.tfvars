@@ -1,6 +1,6 @@
 # General
-name     = "Azure-VMSS-Web-Multi-Region-MultiAZ"
-location = "uksouth"
+resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
+location            = "uksouth"
 
 tags = {
   environment = "staging"
