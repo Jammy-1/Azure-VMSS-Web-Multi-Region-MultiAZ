@@ -214,13 +214,11 @@ jobs:
             -ContainerName "${{ env.STORAGE_CONTAINER_NAME }}"
 
           if (-not $sas) {
-            Write-Error "SAS Token Generation Failed"
-            exit 1
+            throw "SAS Token Generation Failed"
           }
             
-          echo "sas_token=$sas" >> $env:GITHUB_OUTPUT
+          "sas_token=$sas" >> $env:GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
