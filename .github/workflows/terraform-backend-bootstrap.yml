@@ -112,6 +112,10 @@ jobs:
           SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
+
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
@@ -135,17 +139,20 @@ jobs:
         # Wait Storage Account
       - name: Wait for Storage Account
         run: |
-          echo "Waiting For Storage Account ${{ env.STORAGE_ACCOUNT_NAME }} in RG ${{ env.RG_NAME }}..."
-          for i in {1..12}; do
-            az storage account show --name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RG_NAME }} && break
-            echo "Not Ready"
-            sleep 5
-          done
+          echo -n "Waiting For Storage Account '${{ env.STORAGE_ACCOUNT_NAME }}'..."
+          until az storage account show --name "${{ env.STORAGE_ACCOUNT_NAME }}" --resource-group "${{ env.RG_NAME }}" >/dev/null 2>&1; do
+             sleep 5
+             echo -n "."
+           done
+           echo " Ready!"
 
         # Assign RBAC
       - name: Assign SP RBAC
         run: |
-          az role assignment create --assignee ${{ secrets.AZURE_CLIENT_ID }} --role "Storage Blob Data Contributor" --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
+          az role assignment create \
+            --assignee ${{ secrets.AZURE_CLIENT_ID }} \
+            --role "Storage Blob Data Contributor" \
+            --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
 
       - name: Wait for RBAC
         run: sleep 30
@@ -168,6 +175,10 @@ jobs:
           RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
 
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
