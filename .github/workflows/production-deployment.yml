@@ -15,7 +15,7 @@ jobs:
       (github.event.workflow_run.name == 'Terraform Backend Check' ||
        github.event.workflow_run.name == 'Terraform Backend Bootstrap')
 
-    name: Create Terraform State Storage
+    name: Create Production Infra
     runs-on: ubuntu-latest
 
     steps:
@@ -46,6 +46,11 @@ jobs:
           CONTAINER=$(grep -E '^container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
+          KEY="${KEY//$'\r'/}"
+
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
@@ -59,7 +64,7 @@ jobs:
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
             -backend-config="key=${{ env.STATE_KEY }}" \
-            -backend-config="sas_token=${{ secrets.AZURE_SAS_TOKEN }}" \
+            -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
             -reconfigure
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
