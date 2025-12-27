@@ -97,6 +97,7 @@ jobs:
   Storage-RBAC:
     name: Storage RBAC
     runs-on: ubuntu-latest
+    needs: backend-bootstrap
     steps:
       # Backend Variables
       - name: Load Backend Variables
@@ -131,7 +132,7 @@ jobs:
           echo "Waiting For Storage Account ${{ env.STORAGE_ACCOUNT_NAME }} in RG ${{ env.RG_NAME }}..."
           for i in {1..12}; do
             az storage account show --name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RG_NAME }} && break
-            echo "Not ready yet, waiting 5 seconds..."
+            echo "Not Ready"
             sleep 5
           done
 
@@ -146,7 +147,7 @@ jobs:
   add-sas-token:
     name: SAS Token
     runs-on: ubuntu-latest
-    needs: backend-bootstrap
+    needs: Storage-RBAC
 
     outputs:
       sas_token: ${{ steps.generate_sas.outputs.sas_token }}
