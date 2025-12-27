@@ -101,10 +101,10 @@ jobs:
         # Assign RBAC
       - name: Assign SP RBAC
         run: |
-          az role assignment create 
-          --assignee ${{ secrets.AZURE_CLIENT_ID }} \
-          --role "Storage Blob Data Contributor" \
-          --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
+          az role assignment create \
+           --assignee ${{ secrets.AZURE_CLIENT_ID }} \
+           --role "Storage Blob Data Contributor" \
+           --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
