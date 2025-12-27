@@ -40,6 +40,7 @@ $sasToken = az storage container generate-sas `
     --permissions rwl `
     --expiry $expiry `
     --https-only `
+    --auth-mode login `
     --output tsv
 
 if (-not $sasToken) { throw "Failed To Generate SAS token" }
