@@ -274,13 +274,14 @@ jobs:
       - name: Initialize Terraform - Resource-Group - Migrate State
         working-directory: Modules/Resource-Group
         run: |
-          terraform init \
+          terraform init -reconfigure \
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}" \
-          -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
           -migrate-state
+        env:
+          AZURE_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
 
         # Terraform Plan - Resource-Group - Migrate State
       - name: Terraform Plan - Resource-Group - Migrate State
@@ -304,13 +305,14 @@ jobs:
       - name: Initialize Terraform - Storage - Migrate State
         working-directory: Modules/Storage
         run: |
-          terraform init \
+          terraform init -reconfigure\
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}" \
-          -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
           -migrate-state
+        env:
+          AZURE_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
 
         # Terraform Plan - Storage - Migrate State
       - name: Terraform Plan - Storage - Migrate State
