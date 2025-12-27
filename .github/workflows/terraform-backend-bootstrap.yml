@@ -273,60 +273,34 @@ jobs:
         # Terraform Init - Resource-Group - Migrate State
       - name: Initialize Terraform - Resource-Group - Migrate State
         working-directory: Modules/Resource-Group
+        env:
+          ARM_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
         run: |
-          terraform init -reconfigure \
+          terraform init \
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
-          -backend-config="key=${{ env.STATE_KEY }}" \
-          -migrate-state
-        env:
-          AZURE_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
+          -backend-config="key=${{ env.STATE_KEY }}"
 
-        # Terraform Plan - Resource-Group - Migrate State
-      - name: Terraform Plan - Resource-Group - Migrate State
-        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          terraform init -migrate-state \
+          -backend-config="resource_group_name=${{ env.RG_NAME }}" \
+          -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
+          -backend-config="key=${{ env.STATE_KEY }}"
 
-        # Terraform Apply - Resource-Group - Migrate State
-      - name: Migrate State Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-        # Terraform Init - Storage - Migrate State
       - name: Initialize Terraform - Storage - Migrate State
         working-directory: Modules/Storage
+        env:
+          ARM_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
         run: |
-          terraform init -reconfigure\
+          terraform init \
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
-          -backend-config="key=${{ env.STATE_KEY }}" \
-          -migrate-state
-        env:
-          AZURE_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
+          -backend-config="key=${{ env.STATE_KEY }}"
 
-        # Terraform Plan - Storage - Migrate State
-      - name: Terraform Plan - Storage - Migrate State
-        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Backend Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          terraform init -migrate-state \
+          -backend-config="resource_group_name=${{ env.RG_NAME }}" \
+          -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
+          -backend-config="key=${{ env.STATE_KEY }}"
