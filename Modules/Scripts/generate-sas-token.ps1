@@ -38,7 +38,9 @@ $sasToken = az storage container generate-sas `
     --permissions rwl `
     --expiry $expiry `
     --https-only `
-    --auth-mode login `
+     --account-key $(az storage account keys list `
+                      --account-name $StorageAccount `
+                      --query "[0].value" -o tsv) `
     --output tsv
 
 if (-not $sasToken) { throw "Failed To Generate SAS token" }
