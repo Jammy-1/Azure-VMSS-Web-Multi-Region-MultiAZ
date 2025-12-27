@@ -207,7 +207,7 @@ jobs:
         id: generate_sas
         shell: pwsh
         run: |
-          $sas = ./Modules/Scripts/generate_sas-add-sas-token.ps1 `
+          $sas = ./Modules/Scripts/generate-sas-add-sas-token.ps1 `
             -Repo "user/repo" `
             -SecretName "AZURE_SAS_TOKEN" `
             -StorageAccount "${{ env.STORAGE_ACCOUNT_NAME }}" `
