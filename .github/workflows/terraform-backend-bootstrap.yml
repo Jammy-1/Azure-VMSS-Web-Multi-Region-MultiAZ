@@ -99,6 +99,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: backend-bootstrap
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Confirm Environments File
+        run: ls -l environments/backend.tfvars
+
       # Backend Variables
       - name: Load Backend Variables
         run: |
