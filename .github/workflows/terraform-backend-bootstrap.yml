@@ -94,7 +94,11 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-        # Backend Variables
+  Storage-RBAC:
+    name: Storage RBAC
+    runs-on: ubuntu-latest
+    steps:
+      # Backend Variables
       - name: Load Backend Variables
         run: |
           RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
@@ -112,6 +116,15 @@ jobs:
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
 
+        # Azure Authentication
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
         # Wait Storage Account
       - name: Wait for Storage Account
         run: |
@@ -122,22 +135,10 @@ jobs:
             sleep 5
           done
 
-      # Azure Authentication
-      - name: Azure Login
-        run: |
-          az login --service-principal \
-            -u ${{ secrets.AZURE_CLIENT_ID }} \
-            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
-            --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
         # Assign RBAC
       - name: Assign SP RBAC
         run: |
-          az role assignment create \
-           --assignee ${{ secrets.AZURE_CLIENT_ID }} \
-           --role "Storage Blob Data Contributor" \
-           --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
+          az role assignment create --assignee ${{ secrets.AZURE_CLIENT_ID }} --role "Storage Blob Data Contributor" --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
 
       - name: Wait for RBAC
         run: sleep 30
