@@ -94,6 +94,26 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
+      # Wait Storage Account Setup
+      - name: Wait for Storage Setup
+        run: sleep 30
+
+        # Assign RBAC
+      - name: Assign SP RBAC
+        run: |
+          az role assignment create `
+          --assignee ${{ secrets.AZURE_CLIENT_ID }} `
+          --role "Storage Blob Data Contributor" `
+          --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Wait for RBAC
+        run: sleep 30
+
   add-sas-token:
     name: SAS Token
     runs-on: ubuntu-latest
