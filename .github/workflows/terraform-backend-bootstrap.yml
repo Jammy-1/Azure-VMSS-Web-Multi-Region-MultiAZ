@@ -106,6 +106,16 @@ jobs:
             -p ${{ secrets.AZURE_CLIENT_SECRET }} \
             --tenant ${{ secrets.AZURE_TENANT_ID }}
 
+      - name: Load Backend Variables
+        run: |
+          RG=$(grep -E '^rg_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+
+          echo "RG_NAME=$RG" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+
         # Assign RBAC
       - name: Assign SP RBAC
         run: |
