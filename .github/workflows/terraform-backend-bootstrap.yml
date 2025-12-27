@@ -108,13 +108,20 @@ jobs:
 
       - name: Load Backend Variables
         run: |
-          RG=$(grep -E '^rg_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+
+        # Confirm Backend Variables
+      - name: Confirm Backend Variables
+        run: |
+          echo "resource_group_name=$RG_NAME"
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
+          echo "STORAGE_CONTAINER_NAME=$Storage_container_name"
 
         # Assign RBAC
       - name: Assign SP RBAC
@@ -147,13 +154,20 @@ jobs:
       - name: Load Backend Variables
         id: load-vars
         run: |
-          RG=$(grep -E '^rg_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
           echo "RG_NAME=$RG" >> $GITHUB_ENV
           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+
+        # Confirm Backend Variables
+      - name: Confirm Backend Variables
+        run: |
+          echo "resource_group_name=$RG_NAME"
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
+          echo "STORAGE_CONTAINER_NAME=$Storage_container_name"
 
       # Generate SAS Token If Missing
       - name: Generate SAS Token
@@ -203,7 +217,7 @@ jobs:
         # Load Backend Variables
       - name: Load Backend Variables
         run: |
-          RG=$(grep -E '^rg_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
@@ -246,7 +260,7 @@ jobs:
       # Load Backend Variables
       - name: Load Backend Variables
         run: |
-          RG=$(grep -E '^rg_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
           KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
