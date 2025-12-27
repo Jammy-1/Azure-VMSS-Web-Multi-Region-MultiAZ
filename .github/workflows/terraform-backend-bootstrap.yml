@@ -279,12 +279,12 @@ jobs:
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}" \
-          -backend-config="sas_token=${{ secrets.AZURE_SAS_TOKEN }}" \
+          -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
           -migrate-state
 
         # Terraform Plan - Resource-Group - Migrate State
       - name: Terraform Plan - Resource-Group - Migrate State
-        run: terraform plan -var-file=../../environments/production.tfvars -out=tfplan
+        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -292,31 +292,13 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
         # Terraform Apply - Resource-Group - Migrate State
-      - name: Backend Terraform Apply
+      - name: Migrate State Terraform Apply
         run: terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      # Load Backend Variables
-      - name: Load Backend Variables
-        run: |
-          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-          KEY="${KEY//$'\r'/}"
-
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
         # Terraform Init - Storage - Migrate State
       - name: Initialize Terraform - Storage - Migrate State
@@ -327,12 +309,12 @@ jobs:
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}" \
-          -backend-config="sas_token=${{ secrets.AZURE_SAS_TOKEN }}" \
+          -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
           -migrate-state
 
         # Terraform Plan - Storage - Migrate State
       - name: Terraform Plan - Storage - Migrate State
-        run: terraform plan -var-file=../../environments/production.tfvars -out=tfplan
+        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
