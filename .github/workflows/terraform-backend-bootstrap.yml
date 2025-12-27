@@ -94,18 +94,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      # Wait Storage Account Setup
-      - name: Wait for Storage Setup
-        run: sleep 30
-
-      # Azure Authentication
-      - name: Azure Login
-        run: |
-          az login --service-principal \
-            -u ${{ secrets.AZURE_CLIENT_ID }} \
-            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
-            --tenant ${{ secrets.AZURE_TENANT_ID }}
-
+        # Backend Variables
       - name: Load Backend Variables
         run: |
           RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
@@ -121,7 +110,26 @@ jobs:
         run: |
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$Storage_container_name"
+          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
+
+        # Wait Storage Account
+      - name: Wait for Storage Account
+        run: |
+          echo "Waiting For Storage Account ${{ env.STORAGE_ACCOUNT_NAME }} in RG ${{ env.RG_NAME }}..."
+          for i in {1..12}; do
+            az storage account show --name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RG_NAME }} && break
+            echo "Not ready yet, waiting 5 seconds..."
+            sleep 5
+          done
+
+      # Azure Authentication
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
         # Assign RBAC
       - name: Assign SP RBAC
@@ -130,11 +138,6 @@ jobs:
            --assignee ${{ secrets.AZURE_CLIENT_ID }} \
            --role "Storage Blob Data Contributor" \
            --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Wait for RBAC
         run: sleep 30
@@ -167,7 +170,7 @@ jobs:
         run: |
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$Storage_container_name"
+          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
 
       # Generate SAS Token If Missing
       - name: Generate SAS Token
