@@ -17,8 +17,14 @@ jobs:
       - name: List Module Folders
         run: ls -l Modules/
 
-      - name: Confirm Environments File
-        run: ls -l environments/staging/staging.tfvars
+      - name: Confirm Staging Environment File
+        run: |
+          ENV_FILE=environments/staging/staging.tfvars
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "Staging TFVARS File Missing"
+            exit 1
+          fi
+          echo "Found Staging.tfvars"
 
       # Terraform
       - name: Setup Terraform
@@ -28,7 +34,7 @@ jobs:
 
       # Terraform init
       - name: Initialize Terraform
-        run: terraform init -backend=false
+        run: terraform -chdir=environments/staging init -backend=false
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -41,7 +47,12 @@ jobs:
 
       # Terraform Plan
       - name: Terraform Staging Plan
-        run: terraform plan -refresh=false -var-file=environments/staging/staging.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: |
+          terraform -chdir=environments/staging plan \
+            -refresh=false \
+            -var-file=staging.tfvars \
+            -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" \
+            -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
