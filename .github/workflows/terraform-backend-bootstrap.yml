@@ -20,7 +20,7 @@ jobs:
         run: ls -l Modules/
 
       - name: Confirm Environments File
-        run: ls -l environments/production.tfvars
+        run: ls -l environments/backend/backend.tfvars
 
       - name: Clean Terraform Cache - Resource Group
         working-directory: Modules/Resource-Group
@@ -56,7 +56,7 @@ jobs:
       # Terraform Plan - Resource Group
       - name: Terraform Plan Resource Group
         working-directory: Modules/Resource-Group
-        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
+        run: terraform plan -var-file=../../environments/backend/backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -76,7 +76,7 @@ jobs:
       # Terraform Plan - Storage
       - name: Terraform Plan Storage
         working-directory: Modules/Storage
-        run: terraform plan -var-file=../../environments/backend.tfvars -out=tfplan
+        run: terraform plan -var-file=../../environments/backend/backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -102,14 +102,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Confirm Environments File
-        run: ls -l environments/backend.tfvars
+        run: ls -l environments/backend/backend.tfvars
 
       # Backend Variables
       - name: Load Backend Variables
         run: |
-          RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
           RG="${RG//$'\r'/}"
           SA="${SA//$'\r'/}"
@@ -125,6 +125,7 @@ jobs:
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
+          echo "STATE_KEY=$STATE_KEY"
 
         # Azure Authentication
       - name: Azure Login
@@ -184,15 +185,15 @@ jobs:
 
         # Confirm ENV
       - name: Confirm Environments File
-        run: ls -l environments/backend.tfvars
+        run: ls -l environments/backend/backend.tfvars
 
         # Load Backend Variables
       - name: Load Backend Variables
         run: |
-          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^resource_group_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^storage_container_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
           RG="${RG//$'\r'/}"
           SA="${SA//$'\r'/}"
@@ -210,6 +211,7 @@ jobs:
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
+          echo "STATE_KEY=$STATE_KEY"
 
         # Terraform Init - Resource-Group - Migrate State
       - name: Initialize Terraform - Resource-Group - Migrate State
