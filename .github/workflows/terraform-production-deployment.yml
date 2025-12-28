@@ -14,8 +14,14 @@ jobs:
       - name: List Module Folders
         run: ls -l Modules/
 
-      - name: Confirm Production Variables
-        run: ls -l environments/production/production.tfvars
+      - name: Confirm Production Environment File
+        run: |
+          ENV_FILE=environments/staging/production.tfvars
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "Production TFVARS File Missing"
+            exit 1
+          fi
+          echo "Found Production.tfvars"
 
       - name: Clear Terraform Cache
         run: |
@@ -57,7 +63,7 @@ jobs:
       # Terraform Init
       - name: Initialize Terraform
         run: |
-          terraform init -reconfigure \
+          terraform init -chdir=environments/production -reconfigure \
             -backend-config="resource_group_name=${{ env.RG_NAME }}" \
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
