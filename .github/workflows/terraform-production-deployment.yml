@@ -16,7 +16,7 @@ jobs:
 
       - name: Confirm Production Environment File
         run: |
-          ENV_FILE=environments/staging/production.tfvars
+          ENV_FILE=environments/production/production.tfvars
           if [ ! -f "$ENV_FILE" ]; then
             echo "Production TFVARS File Missing"
             exit 1
@@ -40,7 +40,7 @@ jobs:
           RG=$(grep -E '^resource_group_name' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
           SA=$(grep -E '^storage_account_name' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
           CONTAINER=$(grep -E '^container_name' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
 
           RG="${RG//$'\r'/}"
           SA="${SA//$'\r'/}"
