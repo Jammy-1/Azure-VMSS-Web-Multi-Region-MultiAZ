@@ -145,91 +145,33 @@ jobs:
            done
            echo " Ready!"
 
-        # Assign RBAC
-      - name: Assign SP RBAC
+        # Assign Resource Group RBAC
+      - name: Assign SP RBAC - Resource Group Owner
+        run: |
+          az role assignment create \
+            --assignee ${{ secrets.AZURE_CLIENT_ID }} \
+            --role "Owner" \
+            --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }} \
+            >/dev/null 2>&1
+          echo "Role 'Owner' Assigned To SP Successfully."
+
+        # Assign Storage Blob Data Contributo RBAC
+      - name: Assign SP RBAC - Storage Blob Data Contributor
         run: |
           az role assignment create \
             --assignee ${{ secrets.AZURE_CLIENT_ID }} \
             --role "Storage Blob Data Contributor" \
             --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }} \
             >/dev/null 2>&1
-          echo "Role 'Storage Blob Data Contributor' assigned to SP successfully."
+          echo "Role 'Storage Blob Data Contributor' Assigned To SP Successfully."
 
       - name: Wait for RBAC
         run: sleep 15
 
-  add-sas-token:
-    name: SAS Token
-    runs-on: ubuntu-latest
-    needs: Storage-RBAC
-
-    outputs:
-      sas_token: ${{ steps.generate_sas.outputs.sas_token }}
-
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      - name: Load Backend Variables
-        id: load-vars
-        run: |
-          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-
-        # Confirm Backend Variables
-      - name: Confirm Backend Variables
-        run: |
-          echo "resource_group_name=$RG_NAME"
-          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-
-        # Azure Authentication
-      - name: Azure Login
-        run: |
-          az login --service-principal \
-            -u ${{ secrets.AZURE_CLIENT_ID }} \
-            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
-            --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-        # Generate SAS Token If Missing
-      - name: Generate SAS Token
-        id: generate_sas
-        shell: pwsh
-        run: |
-          $sas = ./Modules/Scripts/generate-sas-token.ps1 `
-            -Repo "user/repo" `
-            -SecretName "AZURE_SAS_TOKEN" `
-            -StorageAccount "${{ env.STORAGE_ACCOUNT_NAME }}" `
-            -ContainerName "${{ env.STORAGE_CONTAINER_NAME }}"
-
-          if (-not $sas) {
-            throw "SAS Token Generation Failed"
-          }
-            
-          "sas_token=$sas" >> $env:GITHUB_OUTPUT
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
   migrate-local-state:
     name: Migrate Current Local State to Remote Backend
     runs-on: ubuntu-latest
-    needs: add-sas-token
-
-    env:
-      SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
+    needs: Storage-RBAC
 
     steps:
       - name: Checkout Repo
@@ -273,7 +215,10 @@ jobs:
       - name: Initialize Terraform - Resource-Group - Migrate State
         working-directory: Modules/Resource-Group
         env:
-          ARM_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           terraform init \
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
@@ -290,7 +235,10 @@ jobs:
       - name: Initialize Terraform - Storage - Migrate State
         working-directory: Modules/Storage
         env:
-          ARM_SAS_TOKEN: ${{ needs.add-sas-token.outputs.sas_token }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           terraform init \
           -backend-config="resource_group_name=${{ env.RG_NAME }}" \
