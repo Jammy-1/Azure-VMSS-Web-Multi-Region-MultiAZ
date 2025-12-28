@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Confirm Environments File
-        run: ls -l environments/backend.tfvars
+        run: ls -l environments/backend/backend.tfvars
 
       - name: Azure Login
         uses: azure/login@v1
@@ -79,7 +79,7 @@ jobs:
             --account-name "$SA" \
             --auth-mode login \
             --output tsv | grep -q true; then
-            echo "State key '$KEY' does not exist in container '$CONTAINER'"
+            echo "State key '$KEY' Does Not Exist In Container '$CONTAINER'"
             echo "exists=false" >> $GITHUB_OUTPUT
             exit 1
           fi
