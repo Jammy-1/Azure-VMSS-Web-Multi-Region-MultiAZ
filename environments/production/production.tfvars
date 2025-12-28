@@ -15,7 +15,7 @@ vmss_tags = {
 }
 
 # Storage 
-storage_name           = "tfstatestorage"
+storage_account_name   = "tfstatestorage"
 storage_container_name = "tfstatecontainer"
 state_key              = "production/terraform.tfstate"
 
