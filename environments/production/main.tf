@@ -9,7 +9,7 @@ terraform {
 
 # Network
 module "network" {
-  source   = "./Modules/Network"
+  source   = "../../Modules/Network"
   for_each = { for r in local.deploy_regions : r.name => r }
 
   resource_group_name = var.resource_group_name
@@ -22,7 +22,7 @@ module "network" {
 
 # Load Balancer
 module "lb" {
-  source   = "./Modules/Load-Balancer"
+  source   = "./../Modules/Load-Balancer"
   for_each = { for r in local.deploy_regions : r.name => r }
 
   resource_group_name = var.resource_group_name
@@ -73,7 +73,7 @@ locals {
 
 # VMSS
 module "vmss" {
-  source              = "./Modules/VMSS"
+  source              = "../../Modules/VMSS"
   resource_group_name = var.resource_group_name
   tags                = var.vmss_tags
   for_each            = { for r in local.deploy_regions : r.name => r }
