@@ -80,7 +80,7 @@ jobs:
       # Destroy Resources In Production
       - name: Terraform Destroy Production Resources
         working-directory: environments/production
-        run: terraform destroy -auto-approve
+        run: terraform destroy -var-file=production.tfvars -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
