@@ -17,13 +17,18 @@ jobs:
       - name: Confirm Production Variables
         run: ls -l environments/production.tfvars
 
+      - name: Clear Terraform Cache
+        run: |
+          find . -name ".terraform" -type d -exec rm -rf {} +
+          rm -f .terraform.lock.hcl tfplan
+
       # Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: latest
 
-      # Load Backend Variables From enviroment/backend.tfvars
+      # Load Production Backend Variables
       - name: Load Backend Variables
         run: |
           RG=$(grep -E '^resource_group_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
@@ -41,15 +46,16 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
-      # Terraform Init Remote State File
-      - name: Initialize Terraform Using Remote State
+      # Terraform Init
+      - name: Initialize Terraform
         run: |
           terraform init \
             -backend-config="resource_group_name=${{ env.RG_NAME }}" \
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
             -backend-config="key=${{ env.STATE_KEY }}" \
-            -reconfigure
+            -reconfigure \
+            -migrate-state
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
