@@ -3,7 +3,7 @@ location            = "uksouth"
 
 storage_account_name   = "tfstatestoragemstf1"
 storage_container_name = "tfstatecontainermstf1"
-state_key              = "production/terraform.tfstate"
+state_key              = "backend/terraform.tfstate"
 
 tags = {
   environment = "prod"
