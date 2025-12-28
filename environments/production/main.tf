@@ -22,7 +22,7 @@ module "network" {
 
 # Load Balancer
 module "lb" {
-  source   = "./../Modules/Load-Balancer"
+  source   = "../../Modules/Load-Balancer"
   for_each = { for r in local.deploy_regions : r.name => r }
 
   resource_group_name = var.resource_group_name
