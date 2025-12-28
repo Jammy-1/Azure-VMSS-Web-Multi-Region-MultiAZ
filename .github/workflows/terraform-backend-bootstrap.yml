@@ -3,7 +3,6 @@ on:
   workflow_run:
     workflows: ["Terraform Backend Check"]
     types: [completed]
-  workflow_dispatch:
 
 jobs:
   backend-bootstrap:
@@ -305,9 +304,14 @@ jobs:
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}"
 
-      - name: Trigger Production Deployment
+  trigger-production-deployment:
+    name: Trigger Production Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Production Workflow Trigger
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
