@@ -1,8 +1,3 @@
-# Backend Connection
-terraform {
-  backend "azurerm" {}
-}
-
 # Resource Group - Created With Backend BootStrap
 /*
 module "rg" {
