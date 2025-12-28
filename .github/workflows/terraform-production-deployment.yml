@@ -88,10 +88,6 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          RG_NAME: ${{ env.RG_NAME }}
-          STORAGE_ACCOUNT_NAME: ${{ env.STORAGE_ACCOUNT_NAME }}
-          STORAGE_CONTAINER_NAME: ${{ env.STORAGE_CONTAINER_NAME }}
-          STATE_KEY: ${{ env.STATE_KEY }}
 
       # Terraform Apply
       - name: Production Terraform Apply
@@ -102,10 +98,6 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          RG_NAME: ${{ env.RG_NAME }}
-          STORAGE_ACCOUNT_NAME: ${{ env.STORAGE_ACCOUNT_NAME }}
-          STORAGE_CONTAINER_NAME: ${{ env.STORAGE_CONTAINER_NAME }}
-          STATE_KEY: ${{ env.STATE_KEY }}
 
       - name: List Terraform State Resources
         run: terraform state list
