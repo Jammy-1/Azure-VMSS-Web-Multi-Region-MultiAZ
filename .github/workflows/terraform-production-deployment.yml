@@ -81,6 +81,7 @@ jobs:
 
       # Terraform Plan
       - name: Production Terraform Plan
+        working-directory: environments/production
         run: terraform plan -var-file=production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -90,6 +91,7 @@ jobs:
 
       # Terraform Apply
       - name: Production Terraform Apply
+        working-directory: environments/production
         run: terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
