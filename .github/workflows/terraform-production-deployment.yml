@@ -62,8 +62,9 @@ jobs:
 
       # Terraform Init
       - name: Initialize Terraform
+        working-directory: environments/production
         run: |
-          terraform init -chdir=environments/production -reconfigure \
+          terraform init -reconfigure \
             -backend-config="resource_group_name=${{ env.RG_NAME }}" \
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
@@ -80,7 +81,7 @@ jobs:
 
       # Terraform Plan
       - name: Production Terraform Plan
-        run: terraform plan -var-file=environments/production/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform plan -var-file=../../environments/production/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
