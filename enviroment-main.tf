@@ -1,12 +1,10 @@
-# Resource Group - Created With Backend BootStrap
-/*
 module "rg" {
   source   = "./Modules/Resource-Group"
-  name     = var.resource_group_name
+  resource_group_name = var.resource_group_name
   location = var.location
   tags     = var.tags
 }
-*/
+
 
 # Network
 module "network" {
