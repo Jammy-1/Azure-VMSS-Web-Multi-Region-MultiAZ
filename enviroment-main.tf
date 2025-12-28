@@ -1,8 +1,8 @@
 module "rg" {
-  source   = "./Modules/Resource-Group"
+  source              = "./Modules/Resource-Group"
   resource_group_name = var.resource_group_name
-  location = var.location
-  tags     = var.tags
+  location            = var.location
+  tags                = var.tags
 }
 
 
