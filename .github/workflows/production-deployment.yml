@@ -1,17 +1,9 @@
 name: Terraform Production Deployment
 on:
-  workflow_run:
-    workflows:
-      - "Terraform Backend Check"
-      - "Terraform Backend Bootstrap"
-    types:
-      - completed
+  workflow_dispatch:
 
 jobs:
   Terraform-Production-Deployment:
-    # Run If Either Succeed
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
     name: Create Production Infra
     runs-on: ubuntu-latest
 
