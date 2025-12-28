@@ -25,9 +25,6 @@ jobs:
       - name: List Module Folders
         run: ls -l Modules/
 
-      - name: Confirm Backend Variables
-        run: ls -l environments/backend.tfvars
-
       - name: Confirm Production Variables
         run: ls -l environments/production.tfvars
 
@@ -39,12 +36,11 @@ jobs:
 
       # Load Backend Variables From enviroment/backend.tfvars
       - name: Load Backend Variables
-        id: load-backend-vars
         run: |
-          RG=$(grep -E '^resource_group_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^container_name' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^resource_group_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^container_name' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/production.tfvars | awk -F'=' '{print $2}' | xargs)
 
           RG="${RG//$'\r'/}"
           SA="${SA//$'\r'/}"
@@ -56,15 +52,14 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
-      # Terraform Init Remote Backend
-      - name: Initialize Terraform With Backend
+      # Terraform Init Remote State File
+      - name: Initialize Terraform Using Remote State
         run: |
           terraform init \
             -backend-config="resource_group_name=${{ env.RG_NAME }}" \
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
             -backend-config="key=${{ env.STATE_KEY }}" \
-            -backend-config="sas_token=${{ env.AZURE_SAS_TOKEN }}" \
             -reconfigure
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -87,7 +82,7 @@ jobs:
 
       # Terraform Apply
       - name: Production Terraform Apply
-        run: terraform apply -auto-approve -var-file=environments/production.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
