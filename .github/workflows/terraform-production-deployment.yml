@@ -49,13 +49,11 @@ jobs:
       # Terraform Init
       - name: Initialize Terraform
         run: |
-          terraform init \
+          terraform init -reconfigure \
             -backend-config="resource_group_name=${{ env.RG_NAME }}" \
             -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
             -backend-config="key=${{ env.STATE_KEY }}" \
-            -reconfigure \
-            -migrate-state
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
