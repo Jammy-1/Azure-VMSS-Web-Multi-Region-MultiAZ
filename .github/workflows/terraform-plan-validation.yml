@@ -18,7 +18,7 @@ jobs:
         run: ls -l Modules/
 
       - name: Confirm Environments File
-        run: ls -l environments/staging.tfvars
+        run: ls -l environments/staging/staging.tfvars
 
       # Terraform
       - name: Setup Terraform
@@ -41,7 +41,7 @@ jobs:
 
       # Terraform Plan
       - name: Terraform Staging Plan
-        run: terraform plan -refresh=false -var-file=environments/staging.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
+        run: terraform plan -refresh=false -var-file=environments/staging/staging.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
