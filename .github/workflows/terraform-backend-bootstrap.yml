@@ -84,7 +84,7 @@ jobs:
 
       # Upload Local State For Workflow
       - name: Upload Local Terraform State
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-backend-state
           path: environments/backend/terraform.tfstate
@@ -177,7 +177,7 @@ jobs:
 
       # Download Local State
       - name: Download Local Terraform State
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: terraform-backend-state
           path: environments/backend/
