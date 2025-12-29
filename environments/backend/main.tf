@@ -7,6 +7,7 @@ terraform {
   }
 }
 
+/*
 # Resource Group
 module "resource-group" {
   source              = "../../Modules/Resource-Group"
@@ -29,3 +30,5 @@ module "storage" {
 
   tags = merge(var.env_tags, var.backend_tags)
 }
+
+*/
