@@ -17,9 +17,9 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # List Modules
-      - name: List Module Folders
-        run: ls -l Modules/
+      # List Files
+      - name: List Folder Files
+        run: ls -l environments/backend/bootstrap
 
       # Confirmed Back End File
       - name: Confirm Backend Environment File
@@ -33,7 +33,7 @@ jobs:
 
         # Clear Terraform Cache
       - name: Clean Terraform Cache
-        working-directory: environments/backend
+        working-directory: environments/backend/bootstrap
         run: |
           find . -name ".terraform" -type d -exec rm -rf {} +
           rm -f .terraform.lock.hcl tfplan
@@ -50,13 +50,13 @@ jobs:
 
       # Terraform Init - Backend
       - name: Initialize Terraform Backend
-        working-directory: environments/backend
+        working-directory: environments/backend/bootstrap
         run: terraform init
 
       # Terraform Plan - Backend
       - name: Terraform Plan Backend Resources
-        working-directory: environments/backend
-        run: terraform plan -var-file=backend.tfvars -out=tfplan
+        working-directory: environments/backend/bootstrap
+        run: terraform plan -var-file=../backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -65,7 +65,7 @@ jobs:
 
       # Terraform Apply - Backend
       - name: Terraform Apply Backend
-        working-directory: environments/backend
+        working-directory: environments/backend/bootstrap
         run: terraform apply -auto-approve tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -76,19 +76,24 @@ jobs:
       # Confirm State File In Directory
       - name: Confirm Local Terraform State File
         run: |
-          STATE_FILE=environments/backend/terraform.tfstate
+          STATE_FILE=environments/backend/bootstrap/terraform.tfstate
           if [ ! -f "$STATE_FILE" ]; then
             echo "Local Terraform State File Missing!"
             exit 1
           fi
           echo "Found Local Terraform State - $STATE_FILE"
 
-      # Upload Local State For Workflow
+      # Upload Local State To Migrate
       - name: Upload Local Terraform State
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-backend-state
-          path: environments/backend/terraform.tfstate
+        run: |
+          mkdir -p environments/backend/bootstrap
+          STATE_FILE=environments/backend/bootstrap/terraform.tfstate
+          if [ ! -f "$STATE_FILE" ]; then
+            echo "Terraform Local State Missing"
+            exit 1
+          fi
+          npx upload-artifact terraform-backend-state -p "$STATE_FILE" >/dev/null 2>&1 || exit 1
+          echo "Terraform Local State Uploaded Successfully"
 
   Storage-RBAC:
     name: Storage RBAC
@@ -178,10 +183,10 @@ jobs:
 
       # Download Local State
       - name: Download Local Terraform State
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-backend-state
-          path: environments/backend/
+        run: |
+          mkdir -p environments/backend/bootstrap
+          npx download-artifact terraform-backend-state -p environments/backend >/dev/null 2>&1 || exit 1
+          echo "Terraform State Downloaded Successfully"
 
       # Confirm State File In Directory
       - name: Confirm Local Terraform State File
@@ -235,7 +240,7 @@ jobs:
           echo "STATE_KEY=$STATE_KEY"
 
         # Terraform Init - Backend - Migrate State
-      - name: Initialize Terraform Backend - Migrate Local State
+      - name: Initialize Terraform Backend & Migrate Local State
         working-directory: environments/backend
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
