@@ -108,3 +108,20 @@ jobs:
           fi
 
           echo "Terraform Backend And State Key Exist"
+
+  trigger-production-deployment:
+    name: Trigger Production Deployment
+    runs-on: ubuntu-latest
+    needs: backend-check
+    steps:
+      - name: Production Workflow Trigger
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "terraform-production-deployment.yml",
+              ref: "main"
+            });
