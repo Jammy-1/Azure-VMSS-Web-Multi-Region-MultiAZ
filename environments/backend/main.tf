@@ -17,6 +17,6 @@ module "storage" {
   location               = var.location
 
   depends_on = [module.resource-group]
-  
+
   tags = merge(var.env_tags, var.backend_tags)
 }
