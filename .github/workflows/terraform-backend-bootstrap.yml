@@ -86,9 +86,8 @@ jobs:
         # Copy Local State Into Backend Folder
       - name: Copy Local State to Backend Folder
         run: |
-          mkdir -p environments/backend
           cp environments/backend/bootstrap/terraform.tfstate \
-            environments/backend/backend/
+            environments/backend/
 
         # Confirm State File In Backend Folder
       - name: Confirm Local State In Backend Folder
