@@ -1,6 +1,7 @@
 name: Terraform Backend Check
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Terraform Staging Plan Validation"]
     types:
@@ -19,72 +20,91 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Confirm Environments File
-        run: ls -l environments/backend/backend.tfvars
+      - name: Backend Environment File
+        run: |
+          ENV_FILE=environments/backend/backend.tfvars
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "Backend TFVARS File Missing"
+            exit 1
+          fi
+          echo "Found Backend.tfvars"
 
+        # Azure Authentication
       - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: >
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-            }
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Checking Backend Storage / Container /  Key
-      - name: Check Backend Storage
-        id: check
+      - name: Load Backend Variables
+        run: |
+          RG=$(grep -E '^resource_group_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^storage_account_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^storage_container_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^state_key' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+
+          RG="${RG//$'\r'/}"
+          SA="${SA//$'\r'/}"
+          CONTAINER="${CONTAINER//$'\r'/}"
+          KEY="${KEY//$'\r'/}"
+
+          echo "RG_NAME=$RG" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+
+        # Backend Variables Value
+      - name: Backend Variables Values
+        run: |
+          echo "resource_group_name=$RG_NAME"
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
+          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
+          echo "STATE_KEY=$STATE_KEY"
+
+      - name: Check Terraform Backend Exists
+        shell: bash
         run: |
           set -e
 
-          # Load Variables From Backend tfvars
-          RG=$(grep '^backend_rg_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
-          SA=$(grep '^backend_storage_account_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
-          CONTAINER=$(grep '^storage_container_name' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
-          KEY=$(grep '^state_key' environments/backend.tfvars | awk -F= '{print $2}' | xargs)
+          echo "Checking Terraform Backend"
+          echo "RG        : $RG_NAME"
+          echo "Storage   : $STORAGE_ACCOUNT_NAME"
+          echo "Container : $STORAGE_CONTAINER_NAME"
+          echo "State Key : $STATE_KEY"
 
-          echo "Checking Backend:"
-          echo "  RG        : $RG"
-          echo "  SA        : $SA"
-          echo "  Container : $CONTAINER"
-          echo "  Key       : $KEY"
+          # Storage Account
+          echo "Checking Storage Account..."
+          az storage account show \
+            --name "$STORAGE_ACCOUNT_NAME" \
+            --resource-group "$RG_NAME" \
+            --output none
 
-          # Check Storage Account
-          if ! az storage account show \
-            --name "$SA" \
-            --resource-group "$RG" \
-            --output none 2>/dev/null; then
-            echo "Storage Account Does Not Exist"
-            echo "exists=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-          # Check Container
-          if ! az storage container show \
-            --name "$CONTAINER" \
-            --account-name "$SA" \
+          # Container
+          echo "Checking Container..."
+          az storage container show \
+            --name "$STORAGE_CONTAINER_NAME" \
+            --account-name "$STORAGE_ACCOUNT_NAME" \
             --auth-mode login \
-            --output none 2>/dev/null; then
-            echo "Storage Container Does Not Exist"
-            echo "exists=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
+            --output none
 
-          # Check If State Key Exists
-          if ! az storage blob exists \
-            --container-name "$CONTAINER" \
-            --name "$KEY" \
-            --account-name "$SA" \
+          # State Key
+          echo "Checking State Key..."
+          set +e
+          BLOB_EXISTS=$(az storage blob exists \
+            --container-name "$STORAGE_CONTAINER_NAME" \
+            --name "$STATE_KEY" \
+            --account-name "$STORAGE_ACCOUNT_NAME" \
             --auth-mode login \
-            --output tsv | grep -q true; then
-            echo "State key '$KEY' Does Not Exist In Container '$CONTAINER'"
-            echo "exists=false" >> $GITHUB_OUTPUT
+            --query exists \
+            --output tsv)
+          set -e
+
+          if [[ "$BLOB_EXISTS" != "true" ]]; then
+            echo "Terraform State Key Does Not Exist"
+            echo "Backend Bootstrap Is Required"
             exit 1
           fi
 
-          echo "Backend Found and Key Exists"
-          echo "exists=true" >> $GITHUB_OUTPUT
-          exit 0
-        shell: bash
+          echo "Terraform Backend And State Key Exist"
