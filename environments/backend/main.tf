@@ -16,5 +16,7 @@ module "storage" {
   state_key              = var.state_key
   location               = var.location
 
+  depends_on = [module.resource-group]
+  
   tags = merge(var.env_tags, var.backend_tags)
 }
