@@ -86,7 +86,6 @@ jobs:
       # Upload Local State To Migrate
       - name: Upload Local Terraform State
         run: |
-          mkdir -p environments/backend/bootstrap
           STATE_FILE=environments/backend/bootstrap/terraform.tfstate
           if [ ! -f "$STATE_FILE" ]; then
             echo "Terraform Local State Missing"
