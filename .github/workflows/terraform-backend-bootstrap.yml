@@ -86,12 +86,13 @@ jobs:
       # Upload Local State To Migrate
       - name: Upload Local Terraform State
         run: |
-          STATE_FILE=environments/backend/bootstrap/terraform.tfstate
+          STATE_DIR=environments/backend/bootstrap
+          STATE_FILE=$STATE_DIR/terraform.tfstate
           if [ ! -f "$STATE_FILE" ]; then
             echo "Terraform Local State Missing"
             exit 1
           fi
-          npx upload-artifact terraform-backend-state -p "$STATE_FILE" >/dev/null 2>&1 || exit 1
+          npx upload-artifact terraform-backend-state -p "$STATE_DIR" >/dev/null 2>&1 || exit 1
           echo "Terraform Local State Uploaded Successfully"
 
   Storage-RBAC:
