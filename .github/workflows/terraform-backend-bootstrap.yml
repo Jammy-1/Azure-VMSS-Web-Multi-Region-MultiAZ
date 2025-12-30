@@ -10,7 +10,7 @@ jobs:
     # Run Only If Backend Check Failed
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
 
-    name: Create Terraform State Storage
+    name: Create Backend, Assign RBAC & Migrate State
     runs-on: ubuntu-latest
 
     steps:
@@ -19,87 +19,10 @@ jobs:
 
       # List Files
       - name: List Folder Files
-        run: ls -l environments/backend/bootstrap
+        run:
+          ls -l environments/backend/bootstrap
 
-      # Confirmed Back End File
-      - name: Confirm Backend Environment File
-        run: |
-          ENV_FILE=environments/backend/backend.tfvars
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "Backend TFVARS File Missing"
-            exit 1
-          fi
-          echo "Found Backend.tfvars"
-
-        # Clear Terraform Cache
-      - name: Clean Terraform Cache
-        working-directory: environments/backend/bootstrap
-        run: |
-          find . -name ".terraform" -type d -exec rm -rf {} +
-          rm -f .terraform.lock.hcl tfplan
-
-      # Terraform Setup
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: latest
-
-      # Terraform Version
-      - name: Terraform Version
-        run: terraform version
-
-      # Terraform Init - Backend
-      - name: Initialize Terraform Backend
-        working-directory: environments/backend/bootstrap
-        run: terraform init
-
-      # Terraform Plan - Backend
-      - name: Terraform Plan Backend Resources
-        working-directory: environments/backend/bootstrap
-        run: terraform plan -var-file=../backend.tfvars -out=tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      # Terraform Apply - Backend
-      - name: Terraform Apply Backend
-        working-directory: environments/backend/bootstrap
-        run: terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      # Confirm State File In Boot Strap Folder
-      - name: Confirm Local Terraform State File
-        run: |
-          STATE_FILE=environments/backend/bootstrap/terraform.tfstate
-          if [ ! -f "$STATE_FILE" ]; then
-            echo "Local Terraform State File Missing!"
-            exit 1
-          fi
-          echo "Found Local Terraform State - $STATE_FILE"
-
-        # Copy Local State Into Backend Folder
-      - name: Copy Local State to Backend Folder
-        run: |
-          cp environments/backend/bootstrap/terraform.tfstate \
-            environments/backend/
-
-        # Confirm State File In Backend Folder
-      - name: Confirm Local State In Backend Folder
-        run: |
-          STATE_FILE=environments/backend/terraform.tfstate
-          if [ ! -f "$STATE_FILE" ]; then
-            echo "Local Terraform State File Missing!"
-            exit 1
-          fi
-          echo "Found Local Terraform State - $STATE_FILE"
-
-        # Confirm Backend File
+          # Confirm Backend File
       - name: Confirm Backend Environment File
         run: |
           ENV_FILE=environments/backend/backend.tfvars
@@ -135,59 +58,50 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
           echo "STATE_KEY=$STATE_KEY"
 
-        # Terraform Init - Backend - Migrate State
-      - name: Initialize Terraform Backend & Migrate Local State
-        working-directory: environments/backend
+        # Clear Terraform Cache
+      - name: Clean Terraform Cache
+        working-directory: environments/backend/bootstrap
+        run: |
+          find . -name ".terraform" -type d -exec rm -rf {} +
+          rm -f .terraform.lock.hcl tfplan
+
+      # Terraform Setup
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      # Terraform Version
+      - name: Terraform Version
+        run: terraform version
+
+      # Terraform Init - Backend -Bootstrap Folder
+      - name: Initialize Terraform Bootstrap Folder
+        working-directory: environments/backend/bootstrap
+        run: terraform init
+
+      # Terraform Plan - Backend - Bootstrap Folder
+      - name: Terraform Plan Backend Resources
+        working-directory: environments/backend/bootstrap
+        run: terraform plan -var-file=../backend.tfvars -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: |
-          terraform init \
-          -backend-config="resource_group_name=${{ env.RG_NAME }}" \
-          -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
-          -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
-          -backend-config="key=${{ env.STATE_KEY }}" \
-          -migrate-state
 
-  Storage-RBAC:
-    name: Storage RBAC
-    runs-on: ubuntu-latest
-    needs: backend-bootstrap
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      # Terraform Apply - Backend Bootstrap Folder
+      - name: Terraform Apply Backend Bootstrap
+        working-directory: environments/backend/bootstrap
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      # Confirmed Back End File
-      - name: Confirm Environments File
-        run: ls -l environments/backend/backend.tfvars
-
-      # Backend Variables
-      - name: Load Backend Variables
-        run: |
-          RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-
-        # Confirm Backend Variables
-      - name: Confirm Backend Variables
-        run: |
-          echo "resource_group_name=$RG_NAME"
-          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-          echo "STATE_KEY=$STATE_KEY"
-
-        # Azure Authentication
-      - name: Azure Login
+        # Azure Authentication - Used To Confirm RG & Storage Account Provisioned
+      - name: Azure Authentication
         run: |
           az login --service-principal \
             -u ${{ secrets.AZURE_CLIENT_ID }} \
@@ -195,8 +109,8 @@ jobs:
             --tenant ${{ secrets.AZURE_TENANT_ID }}
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        # Wait Storage Account
-      - name: Waiting For Storage To Provision..
+        # Wait Resources To Provision
+      - name: Waiting For Resources To Provision
         run: |
           echo -n "Waiting For Storage Account '${{ env.STORAGE_ACCOUNT_NAME }}'..."
           until az storage account show --name "${{ env.STORAGE_ACCOUNT_NAME }}" --resource-group "${{ env.RG_NAME }}" >/dev/null 2>&1; do
@@ -225,20 +139,28 @@ jobs:
             >/dev/null 2>&1
           echo "Role 'Storage Blob Data Contributor' Assigned To SP Successfully."
 
-      - name: Wait for RBAC
+        # Wait For RBAC Roles To Assign
+      - name: Wait for RBAC Roles To Assign
         run: sleep 15
 
-  migrate-local-state:
-    name: Migrate Current Local State to Remote Backend
-    runs-on: ubuntu-latest
-    needs: Storage-RBAC
-
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      # Confirm State File In Directory
+      # Confirm State File In Boot Strap Folder
       - name: Confirm Local Terraform State File
+        run: |
+          STATE_FILE=environments/backend/bootstrap/terraform.tfstate
+          if [ ! -f "$STATE_FILE" ]; then
+            echo "Local Terraform State File Missing!"
+            exit 1
+          fi
+          echo "Found Local Terraform State - $STATE_FILE"
+
+        # Copy Local State Into Backend Folder
+      - name: Copy Local State to Backend Folder
+        run: |
+          cp environments/backend/bootstrap/terraform.tfstate \
+            environments/backend/
+
+        # Confirm State File In Backend Folder
+      - name: Confirm Local State In Backend Folder
         run: |
           STATE_FILE=environments/backend/terraform.tfstate
           if [ ! -f "$STATE_FILE" ]; then
@@ -247,49 +169,8 @@ jobs:
           fi
           echo "Found Local Terraform State - $STATE_FILE"
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: latest
-
-        # Confirm Backend File
-      - name: Confirm Backend Environment File
-        run: |
-          ENV_FILE=environments/backend/backend.tfvars
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "Backend TFVARS File Missing"
-            exit 1
-          fi
-          echo "Found Backend.tfvars"
-
-        # Load Backend Variables
-      - name: Load Backend Variables
-        run: |
-          RG=$(grep -E '^resource_group_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-          KEY="${KEY//$'\r'/}"
-
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
-
-        # Confirm Backend Variables
-      - name: Confirm Backend Variables
-        run: |
-          echo "resource_group_name=$RG_NAME"
-          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-          echo "STATE_KEY=$STATE_KEY"
-
         # Terraform Init - Backend - Migrate State
-      - name: Initialize Terraform Backend & Migrate Local State
+      - name: Initialize Terraform Backend Folder & Migrate Local State
         working-directory: environments/backend
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -302,12 +183,12 @@ jobs:
           -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" \
           -backend-config="key=${{ env.STATE_KEY }}" \
-          -migrate-state
+          -force-copy
 
   trigger-production-deployment:
     name: Trigger Production Deployment
     runs-on: ubuntu-latest
-    needs: migrate-local-state
+    needs: backend-bootstrap
     steps:
       - name: Production Workflow Trigger
         uses: actions/github-script@v6
