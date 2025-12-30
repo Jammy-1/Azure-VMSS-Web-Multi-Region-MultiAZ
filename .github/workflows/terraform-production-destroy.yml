@@ -145,7 +145,7 @@ jobs:
       # Destroy Resources In Production
       - name: Terraform Destroy Backend Resources
         working-directory: environments/backend
-        run: terraform destroy -var-file=backend.tfvars -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" -auto-approve
+        run: terraform destroy -var-file=backend.tfvars -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
