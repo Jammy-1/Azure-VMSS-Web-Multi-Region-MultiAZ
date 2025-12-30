@@ -99,10 +99,10 @@ jobs:
       # Production Backend Variables
       - name: Load Backend Remote State Variables
         run: |
-          RG=$(grep -E '^\s*resource_group_name\s*=' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^\s*storage_account_name\s*=' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^\s*state_key\s*=' environments/production/production.tfvars | awk -F'=' '{print $2}' | xargs)
+          RG=$(grep -E '^\s*resource_group_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          SA=$(grep -E '^\s*storage_account_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          CONTAINER=$(grep -E '^\s*storage_container_name\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          KEY=$(grep -E '^\s*state_key\s*=' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
 
 
           RG="${RG//$'\r'/}"
