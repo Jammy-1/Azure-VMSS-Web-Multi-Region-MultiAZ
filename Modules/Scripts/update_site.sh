@@ -6,7 +6,7 @@ REPO_URL="https://github.com/Jammy-1/Azure-VMSS-Web-Multi-Region-MultiAZ.git"
 BRANCH="main"
 SITE_PATH="/opt/myrepo"
 WEB_ROOT="/var/www/html"
-PROJECT_PATH="static-Site"
+PROJECT_PATH="Static-Site"
 
 # Logging
 LOG_DIR="/var/log/site_update"

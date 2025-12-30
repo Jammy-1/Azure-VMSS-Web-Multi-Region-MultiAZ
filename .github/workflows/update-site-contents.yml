@@ -23,6 +23,25 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
+      - name: List VMSS & Instances
+        run: |
+          echo "Discovering VMSS..."
+          VMSS_LIST=$(az vmss list --query "[?tags.App=='vmss-static-site'].[name,resourceGroup]" -o tsv)
+
+          if [ -z "$VMSS_LIST" ]; then
+            echo "No VMSS found"
+            exit 0
+          fi
+
+          echo "Discovered VMSS And Instances:"
+          while IFS=$'\t' read -r VMSS RG; do
+            echo "-------------------------------------------"
+            echo "VMSS: $VMSS (Resource Group: $RG)"
+            az vmss list-instances --resource-group "$RG" --name "$VMSS" \
+              --query "[].{InstanceID:instanceId, Name:computerName, State:provisioningState}" \
+              -o table
+          done <<< "$VMSS_LIST"
+
       - name: Discover VMSS And Update
         run: |
           set -e
