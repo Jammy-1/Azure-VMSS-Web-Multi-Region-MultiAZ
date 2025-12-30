@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "Azure-VMSS-Web-Multi-Region-MultiAZ/Static Site/**"
+      - "Azure-VMSS-Web-Multi-Region-MultiAZ/Static-Site/**"
 
 jobs:
   deploy:
