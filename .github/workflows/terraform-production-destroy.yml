@@ -124,6 +124,24 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
           echo "STATE_KEY=$STATE_KEY"
 
+        # Azure Authentication
+      - name: Azure Authentication
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZURE_CLIENT_ID }} \
+            -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Break Lease
+      - name: Break Terraform Backend Lease
+        run: |
+          az storage blob lease break \
+            --account-name ${{ env.STORAGE_ACCOUNT_NAME }} \
+            --container-name ${{ env.STORAGE_CONTAINER_NAME }} \
+            --blob-name ${{ env.STATE_KEY }} \
+          --auth-mode login
+
         # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
