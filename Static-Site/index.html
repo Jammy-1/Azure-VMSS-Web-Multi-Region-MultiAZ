@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure-VMSS-Web-Multi-Region-MultiAZ</title>
     <link rel="stylesheet" href="styles.css" />
-    <script
-      type="module"
-      src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs"
-    ></script>
-    <script>
-      mermaid.initialize({ startOnLoad: true });
-    </script>
   </head>
 
   <body>
@@ -300,16 +293,6 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
           </li>
         </ol>
 
-        <h3>Workflow Diagram</h3>
-        <div class="mermaid">
-        flowchart TD
-            A[PR to Dev branch] --> B[Unit Tests]
-            B --> C[Plan Validation]
-            C --> D[Backend Checks]
-            D --> E[Bootstrap Backend]
-            E --> F[Production Deployment]
-            F --> G[Production & Backend Destroy]
-        </div>
       <section>
         <h2>Deployment Instructions</h2>
         <ol>
