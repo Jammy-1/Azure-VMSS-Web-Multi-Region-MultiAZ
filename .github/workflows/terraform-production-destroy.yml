@@ -140,7 +140,7 @@ jobs:
             --account-name ${{ env.STORAGE_ACCOUNT_NAME }} \
             --container-name ${{ env.STORAGE_CONTAINER_NAME }} \
             --blob-name ${{ env.STATE_KEY }} \
-          --auth-mode login
+          --auth-mode login || echo "No lease present, continuing..."
 
         # Setup Terraform
       - name: Setup Terraform
