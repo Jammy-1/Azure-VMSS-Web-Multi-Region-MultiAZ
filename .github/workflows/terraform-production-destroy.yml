@@ -124,6 +124,12 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
           echo "STATE_KEY=$STATE_KEY"
 
+        # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
       # Initialize Terraform Using Backend State
       - name: Initialize Backend Terraform State
         working-directory: environments/backend
