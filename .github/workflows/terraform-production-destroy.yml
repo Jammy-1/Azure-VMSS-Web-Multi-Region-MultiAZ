@@ -169,7 +169,7 @@ jobs:
       # Destroy Resources In Production
       - name: Terraform Destroy Backend Resources
         working-directory: environments/backend
-        run: terraform destroy -var-file=backend.tfvars -auto-approve
+        run: terraform destroy -var-file=backend.tfvars -auto-approve -lock=false
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
