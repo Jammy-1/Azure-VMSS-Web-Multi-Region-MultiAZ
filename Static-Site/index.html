@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure-VMSS-Web-Multi-Region-MultiAZ</title>
     <link rel="stylesheet" href="styles.css" />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs"
+    ></script>
+    <script>
+      mermaid.initialize({ startOnLoad: true });
+    </script>
   </head>
 
   <body>
@@ -43,12 +50,17 @@
           </li>
           <li>
             Website updates are deployed automatically through GitHub Actions on
-            each push to the main branch. Allowing site updates without
+            each push to the main branch, allowing site updates without
             redeploying infrastructure.
           </li>
           <li>
             Configuration also ensures each Linux VM is kept up to date with the
             latest system and package updates during provisioning.
+          </li>
+          <li>
+            Fully automated CI/CD pipelines are implemented using GitHub
+            Actions; Unit tests, Terraform validation, Backend Checks, Backend
+            Bootstrap, Production Deployment & Destruction.
           </li>
         </ul>
       </section>
@@ -183,8 +195,8 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
     │
     ├── Automation & CI/CD
     │   ├── GitHub Actions
-    │   │   ├── Trigger: Push to main branch
-    │   │   ├── Azure authentication (OIDC / Service Principal)
+    │   │   ├── Trigger: Pull requests to dev branch
+    │   │   ├── Azure authentication (Service Principal)
     │   │   ├── Dynamic VMSS discovery (per Resource Group)
     │   │   └── az vmss run-command invoke
     │   │       └── Pulls latest static site content from GitHub
@@ -203,13 +215,109 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
       </section>
 
       <section>
+        <h2>Details</h2>
+        <ul>
+          <li>
+            Load Balancer distributes web traffic evenly across all VM
+            instances.
+          </li>
+          <li>
+            Each VM runs Apache and serves content from the GitHub repository.
+          </li>
+          <li>
+            When a change is pushed to the GitHub repository, a GitHub Action
+            automatically deploys the latest version of the site to all running
+            VMs.
+          </li>
+          <li>
+            VM Scale Set ensures scalability and high availability across
+            multiple zones.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Automated Website Code Deployment</h2>
+        <ul>
+          <li>
+            Terraform provisions the VMSS and installs Apache and Git using
+            cloud-init.
+          </li>
+          <li>
+            Initial website content is cloned from GitHub during VM creation.
+          </li>
+          <li>
+            GitHub Actions workflow is triggered on every pull request targeting
+            the <code>dev</code> branch, specifically for changes in the
+            <code>Static-Site</code> folder:
+            <ul>
+              <li>
+                Dynamically discovers all VM Scale Sets in the target Resource
+                Group.
+              </li>
+              <li>
+                Executes a shell script to pull the latest version of the
+                repository into the web root.
+              </li>
+              <li>Restarts Apache to serve the new content.</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>CI/CD Workflow</h2>
+        <p>
+          Project includes multiple automated workflows to ensure safe, tested,
+          and structured deployments. All workflows currently trigger on pull
+          requests targeting the <code>dev</code> branch.
+        </p>
+
+        <h3>Workflow Sequence</h3>
+        <ol>
+          <li>
+            <strong>Unit Tests</strong> – Validate application code and scripts.
+          </li>
+          <li>
+            <strong>Plan Validation</strong> – Terraform plan validation to
+            check for errors before apply.
+          </li>
+          <li>
+            <strong>Backend Checks</strong> – Verify Terraform backend is
+            configured and accessible.
+          </li>
+          <li>
+            <strong>Bootstrap Backend</strong> – Creates Terraform backend in
+            Azure if not already provisioned.
+          </li>
+          <li>
+            <strong>Production Deployment</strong> – Apply infrastructure
+            changes to the production environment.
+          </li>
+          <li>
+            <strong>Production & Backend Destroy</strong> – Safely tear down
+            infrastructure when required.
+          </li>
+        </ol>
+
+        <h3>Workflow Diagram</h3>
+        <div class="mermaid">
+        flowchart TD
+            A[PR to Dev branch] --> B[Unit Tests]
+            B --> C[Plan Validation]
+            C --> D[Backend Checks]
+            D --> E[Bootstrap Backend]
+            E --> F[Production Deployment]
+            F --> G[Production & Backend Destroy]
+        </div>
+      <section>
         <h2>Deployment Instructions</h2>
         <ol>
           <li>
             <strong>Clone this repository:</strong>
             <pre>
-git clone https://github.com/Jammy-1/Azure-VMSS-Web-Multi-Region-MultiAZ/
-cd Azure-VMSS-Web-Multi-Region-MultiAZ
+git clone https://github.com/Jammy-1/Azure-VMSS-Web-Multi-Region-MultiAZ
+cd Azure-VMSS-Web-Multi-Region-MultiAZ/
             </pre>
           </li>
           <li>
