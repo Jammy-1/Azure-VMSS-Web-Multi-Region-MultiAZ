@@ -1,6 +1,7 @@
-name: Terraform Unit Tests
+name: Terraform Static Analysis
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "**/*.tf"
@@ -14,7 +15,7 @@ on:
     branches: [dev]
 
 jobs:
-  Terraform-Unit-Test:
+  terraform-format-validate:
     runs-on: ubuntu-latest
     env:
       TF_LOG: "ERROR"
@@ -48,11 +49,30 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      # Setup TFLint
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    needs: terraform-format-validate
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+        # Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+        # Initialize Terraform Without Backend
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+        # Setup TFLint
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
 
-      # Azure TFLint config
+        # Azure TFLint config
       - name: Configure Azure TFLint Rules
         run: |
           cat <<EOF > .tflint.hcl
@@ -67,12 +87,12 @@ jobs:
           }
 
           rule "terraform_unused_declarations" {
-              enabled = true
-              level   = "WARNING"
-            }
+            enabled = true
+            level   = "WARNING"
+          }
           EOF
 
-      # TF Init
+        # TF Init
       - name: Initialize TFLint
         run: tflint --init
         env:
@@ -81,3 +101,22 @@ jobs:
       # Run RFLint
       - name: Run TFLint
         run: tflint -f compact || true
+
+  checkov-security-analysis:
+    name: Checkov Security Analysis
+    runs-on: ubuntu-latest
+    needs: tflint
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      #  Run Checkov
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          check: CKV_AZURE_*
+          soft_fail: false
+          output_format: cli
