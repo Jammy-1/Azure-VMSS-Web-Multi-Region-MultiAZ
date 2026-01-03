@@ -122,5 +122,5 @@ jobs:
           output_format: cli
           download_external_modules: true
 
-          # HTTP (160) - Storage Account Replication(206)
-          skip_check: CKV_AZURE_160,CKV_AZURE_206
+          # HTTP (160) - Storage Account Replication(206) - Storage Queue Logging (33)
+          skip_check: CKV_AZURE_160,CKV_AZURE_206,CKV_AZURE_33

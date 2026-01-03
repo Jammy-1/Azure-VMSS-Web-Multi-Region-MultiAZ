@@ -9,9 +9,9 @@ resource "azurerm_storage_account" "this" {
   https_traffic_only_enabled = true
   min_tls_version            = "TLS1_2"
 
-  shared_access_key_enabled     = "false"
-  public_network_access_enabled = "false"
-
+  shared_access_key_enabled       = "false"
+  public_network_access_enabled   = "false"
+  allow_nested_items_to_be_public = "false"
 
   blob_properties {
     delete_retention_policy {
@@ -55,11 +55,8 @@ resource "azurerm_monitor_diagnostic_setting" "storage_logs" {
   enabled_log { category = "StorageRead" }
   enabled_log { category = "StorageWrite" }
   enabled_log { category = "StorageDelete" }
-  
-  enabled_log { category = "QueueRead" }
-  enabled_log { category = "QueueWrite" }
-  enabled_log { category = "QueueDelete" }
-  
+  enabled_log { category = "Queue" }
+
   enabled_metric { category = "AllMetrics" }
 
   timeouts {
