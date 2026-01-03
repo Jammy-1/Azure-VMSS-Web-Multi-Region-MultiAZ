@@ -1,9 +1,9 @@
-name: Terraform Staging Plan Validation
+name: Terraform Plan Validation
 
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Terraform Unit Tests"]
+    workflows: ["Terraform Static Analysis"]
     types:
       - completed
 

@@ -3,7 +3,7 @@ name: Terraform Backend Check
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Terraform Staging Plan Validation"]
+    workflows: ["Terraform Plan Validation"]
     types:
       - completed
   push:
