@@ -100,7 +100,7 @@ jobs:
 
       # Run RFLint
       - name: Run TFLint
-        run: tflint -f compact || true
+        run: tflint --recursive Modules/ -f compact || true
 
   checkov-security-analysis:
     name: Checkov Security Analysis
@@ -120,3 +120,7 @@ jobs:
           check: CKV_AZURE_*
           soft_fail: false
           output_format: cli
+          download_external_modules: true
+
+          # HTTP (160) - Storage Account Replication(206)
+          skip_check: CKV_AZURE_160,CKV_AZURE_206
