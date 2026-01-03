@@ -100,7 +100,7 @@ jobs:
 
       # Run RFLint
       - name: Run TFLint
-        run: tflint --recursive Modules/ -f compact || true
+        run: tflint --recursive -f compact
 
   checkov-security-analysis:
     name: Checkov Security Analysis
