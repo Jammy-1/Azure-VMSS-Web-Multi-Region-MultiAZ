@@ -7,6 +7,11 @@ storage_account_name   = "tfstatestoragemstf1"
 storage_container_name = "tfstatecontainermstf1"
 state_key              = "backend/terraform.tfstate"
 
+# Event Hub 
+eventhub_namespace      = "website-namespace-mstf"
+eventhub_name           = "storage-hub-mstf"
+eventhub_auth_rule_name = "event-auth-rule"
+
 # Environment Tags
 env_tags = {
   environment = "backend"

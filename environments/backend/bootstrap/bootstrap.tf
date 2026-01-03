@@ -7,6 +7,19 @@ module "resource-group" {
   tags = merge(var.env_tags, var.backend_tags)
 }
 
+# Event Hub 
+module "event-hub" {
+  source                  = "../../../Modules/Event-Hub"
+  resource_group_name     = var.resource_group_name
+  eventhub_name           = var.eventhub_name
+  eventhub_namespace      = var.eventhub_namespace
+  eventhub_auth_rule_name = var.eventhub_auth_rule_name
+  location                = var.location
+  tags                    = var.env_tags
+
+  depends_on = [module.resource-group]
+}
+
 # Storage
 module "storage" {
   source                 = "../../../Modules/Storage"
@@ -16,7 +29,12 @@ module "storage" {
   state_key              = var.state_key
   location               = var.location
 
-  depends_on = [module.resource-group]
+  eventhub_name         = var.eventhub_name
+  eventhub_namespace    = var.eventhub_namespace
+  eventhub_auth_rule_id = module.event-hub.eventhub_auth_rule_id
+
+  depends_on = [module.resource-group, module.event-hub]
 
   tags = merge(var.env_tags, var.backend_tags)
 }
+
