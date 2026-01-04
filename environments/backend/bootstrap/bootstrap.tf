@@ -29,12 +29,23 @@ module "storage" {
   state_key              = var.state_key
   location               = var.location
 
-  eventhub_name         = var.eventhub_name
-  eventhub_namespace    = var.eventhub_namespace
-  eventhub_auth_rule_id = module.event-hub.eventhub_auth_rule_id
-
-  depends_on = [module.resource-group, module.event-hub]
+  depends_on = [module.resource-group]
 
   tags = merge(var.env_tags, var.backend_tags)
 }
 
+module "storage-diagnostics" {
+  source = "../../../Modules/Storage/Storage-Diagnostics"
+
+  storage_account_id   = var.storage_account.id
+  storage_account_name = var.storage_account_name
+
+  eventhub_name         = var.eventhub_name
+  eventhub_namespace    = var.eventhub_namespace
+  eventhub_auth_rule_id = module.event-hub.eventhub_auth_rule_id
+
+  depends_on = [
+    module.storage,
+    module.event-hub
+  ]
+}
