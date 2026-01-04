@@ -159,7 +159,7 @@ jobs:
             -target=module.event-hub.azurerm_eventhub.this \
             -target=module.event-hub.azurerm_eventhub_namespace_authorization_rule.this \
             -target=module.storage.azurerm_monitor_diagnostic_setting.blob_logs \
-            -var="enable_storage_diagnostics=true"
+            -var="enable_storage_diagnostics=true" \
             -var-file=../backend.tfvars \
             -out=tfplan
         env:
