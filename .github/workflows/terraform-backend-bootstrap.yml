@@ -80,17 +80,23 @@ jobs:
         working-directory: environments/backend/bootstrap
         run: terraform init
 
-      # Terraform Plan - Backend - Bootstrap Folder
-      - name: Terraform Plan Backend Resources
+      # Terraform Plan - Backend - RG & Storage - Bootstrap Folder
+      - name: Terraform Plan Resource-Group & Storage
         working-directory: environments/backend/bootstrap
-        run: terraform plan -var-file=../backend.tfvars -out=tfplan
+        run: |
+          terraform plan \
+            -target=module.resource-group.azurerm_resource_group.this \
+            -target=module.storage.azurerm_storage_account.this \
+            -target=module.storage.azurerm_storage_container.this \
+            -var-file=../backend.tfvars \
+            -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      # Terraform Apply - Backend Bootstrap Folder
+      # Terraform Apply - Backend - RG & Storage - Bootstrap Folder
       - name: Terraform Apply Backend Bootstrap
         working-directory: environments/backend/bootstrap
         run: terraform apply -auto-approve tfplan
@@ -142,6 +148,28 @@ jobs:
         # Wait For RBAC Roles To Assign
       - name: Wait for RBAC Roles To Assign
         run: sleep 15
+
+        # Terraform Plan - Backend - Event Hub & Storage Logs - Bootstrap Folder
+      - name: Terraform Plan Resource-Group & Storage
+        working-directory: environments/backend/bootstrap
+        run: |
+          terraform plan \
+            -target=module.event-hub.azurerm_eventhub_namespace.this \
+            -target=module.event-hub.azurerm_eventhub.this \
+            -target=module.event-hub.azurerm_eventhub_namespace_authorization_rule.this \
+            -target=module.storage.azurerm_monitor_diagnostic_setting.blob_logs \
+            -var-file=../backend.tfvars \
+            -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      # Terraform Plan - Backend - Event Hub & Storage Logs - Bootstrap Folder
+      - name: Terraform Apply Event Hub & Diagnostics
+        working-directory: environments/backend/bootstrap
+        run: terraform apply -auto-approve tfplan
 
       # Confirm State File In Boot Strap Folder
       - name: Confirm Local Terraform State File
