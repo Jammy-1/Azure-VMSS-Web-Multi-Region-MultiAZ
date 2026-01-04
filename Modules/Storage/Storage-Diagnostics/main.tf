@@ -1,7 +1,7 @@
 # Blob Logs
 resource "azurerm_monitor_diagnostic_setting" "blob_logs" {
   name               = "${var.storage_account_name}-blob-logs"
-  target_resource_id = "${azurerm_storage_account.this.id}/blobServices/default"
+  target_resource_id = "${var.storage_account_id}/blobServices/default"
 
   eventhub_name                  = var.eventhub_name
   eventhub_authorization_rule_id = var.eventhub_auth_rule_id

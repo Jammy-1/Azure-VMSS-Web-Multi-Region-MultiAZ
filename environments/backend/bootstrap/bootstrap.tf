@@ -37,7 +37,7 @@ module "storage" {
 module "storage-diagnostics" {
   source = "../../../Modules/Storage/Storage-Diagnostics"
 
-  storage_account_id   = var.storage_account.id
+  storage_account_id   = module.storage.storage_account_id
   storage_account_name = var.storage_account_name
 
   eventhub_name         = var.eventhub_name
