@@ -151,7 +151,7 @@ jobs:
         run: sleep 15
 
         # Terraform Plan - Backend - Event Hub & Storage Logs - Bootstrap Folder
-      - name: Terraform Plan Resource-Group & Storage
+      - name: Terraform Plan Event Hub & Storage Logs
         working-directory: environments/backend/bootstrap
         run: |
           terraform plan \
@@ -159,7 +159,7 @@ jobs:
             -target=module.event-hub.azurerm_eventhub.this \
             -target=module.event-hub.azurerm_eventhub_namespace_authorization_rule.this \
             -target=module.storage.azurerm_monitor_diagnostic_setting.blob_logs \
-            terraform plan -var="enable_storage_diagnostics=true"
+            -var="enable_storage_diagnostics=true"
             -var-file=../backend.tfvars \
             -out=tfplan
         env:
