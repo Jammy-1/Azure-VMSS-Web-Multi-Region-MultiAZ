@@ -8,7 +8,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "this" {
   instances                       = var.instance_count
   admin_username                  = var.vm_admin_username
   disable_password_authentication = true
-  encryption_at_host_enabled      = true
+  encryption_at_host_enabled      = false
 
 
   tags = var.tags
