@@ -13,3 +13,8 @@ variable "backend_tags" { type = map(string) }
 variable "eventhub_namespace" { type = string }
 variable "eventhub_name" { type = string }
 variable "eventhub_auth_rule_name" { type = string }
+
+variable "enable_storage_diagnostics" {
+  type    = bool
+  default = false
+}

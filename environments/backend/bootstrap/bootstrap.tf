@@ -44,8 +44,5 @@ module "storage-diagnostics" {
   eventhub_namespace    = var.eventhub_namespace
   eventhub_auth_rule_id = module.event-hub.eventhub_auth_rule_id
 
-  depends_on = [
-    module.storage,
-    module.event-hub
-  ]
+  count = var.enable_storage_diagnostics ? 1 : 0
 }
