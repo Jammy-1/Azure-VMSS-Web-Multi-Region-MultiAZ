@@ -19,10 +19,9 @@ resource "azurerm_eventhub" "this" {
 }
 
 # Rule
-resource "azurerm_eventhub_authorization_rule" "this" {
+resource "azurerm_eventhub_namespace_authorization_rule" "this" {
   name                = var.eventhub_auth_rule_name
   namespace_name      = azurerm_eventhub_namespace.this.name
-  eventhub_name       = azurerm_eventhub.this.name
   resource_group_name = var.resource_group_name
 
   listen = false

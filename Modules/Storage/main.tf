@@ -10,8 +10,8 @@ resource "azurerm_storage_account" "this" {
   min_tls_version            = "TLS1_2"
 
   shared_access_key_enabled       = "true"
-  public_network_access_enabled   = "false"
-  allow_nested_items_to_be_public = "false"
+  public_network_access_enabled   = "true"
+  allow_nested_items_to_be_public = "true"
 
   blob_properties {
     delete_retention_policy {
@@ -44,10 +44,10 @@ resource "azurerm_storage_blob" "this" {
   ]
 }
 
-# Monitor
-resource "azurerm_monitor_diagnostic_setting" "storage_logs" {
-  name               = "${var.storage_account_name}-logs"
-  target_resource_id = azurerm_storage_account.this.id
+# Blob Logs
+resource "azurerm_monitor_diagnostic_setting" "blob_logs" {
+  name               = "${var.storage_account_name}-blob-logs"
+  target_resource_id = "${azurerm_storage_account.this.id}/blobServices/default"
 
   eventhub_name                  = var.eventhub_name
   eventhub_authorization_rule_id = var.eventhub_auth_rule_id
@@ -55,7 +55,7 @@ resource "azurerm_monitor_diagnostic_setting" "storage_logs" {
   enabled_log { category = "StorageRead" }
   enabled_log { category = "StorageWrite" }
   enabled_log { category = "StorageDelete" }
-  enabled_log { category = "Queue" }
+
 
   enabled_metric { category = "AllMetrics" }
 
