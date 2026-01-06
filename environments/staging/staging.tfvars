@@ -1,11 +1,11 @@
 # General
-resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
+resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ-Staging"
 location            = "uksouth"
 
 tags = {
-  environment = "staging"
+  environment = "Staging"
   project     = "Web-Site"
-  owner       = "dev"
+  owner       = "Web-Staging"
 }
 
 # VMSS Tags
@@ -14,6 +14,10 @@ vmss_tags = {
   tier = "web"
 }
 
+# Storage 
+storage_account_name   = "tfstatestoragemstf1staging"
+storage_container_name = "tfstatecontainermstf1staging"
+state_key              = "staging/terraform.tfstate"
 
 # VNet
 vnet_name          = "vnet-static"

@@ -1,11 +1,11 @@
 # General
-resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ"
+resource_group_name = "Azure-VMSS-Web-Multi-Region-MultiAZ-Development"
 location            = "uksouth"
 
 tags = {
-  environment = "staging"
+  environment = "Development"
   project     = "Web-Site"
-  owner       = "dev"
+  owner       = "Web-Development"
 }
 
 # VMSS Tags
@@ -15,14 +15,14 @@ vmss_tags = {
 }
 
 # Storage 
-storage_account_name   = "tfstatestoragemstf1"
-storage_container_name = "tfstatecontainermstf1"
+storage_account_name   = "tfstatestoragemstfdevelopment"
+storage_container_name = "tfstatecontainermstfdevelopment"
 state_key              = "dev/terraform.tfstate"
 
 # VNet
 vnet_name          = "vnet-static"
 vnet_address_space = ["10.0.0.0/16"]
-subnet_name        = "snet-web"
+subnet_name        = "snet-web-dev"
 subnet_prefix      = "10.0.1.0/24"
 
 public_ip_name = "pub-static-lb"
