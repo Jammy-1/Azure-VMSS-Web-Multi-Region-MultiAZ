@@ -2,20 +2,22 @@ name: Terraform Static Analysis
 
 on:
   workflow_dispatch:
-  push:
+
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
     paths:
       - "**/*.tf"
       - "**/*.tfvars"
       - "**/modules/**"
       - ".github/workflows/**"
       - "**/*.md"
-    branches: [dev]
-
-  pull_request:
-    branches: [dev]
 
 jobs:
   terraform-format-validate:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       TF_LOG: "ERROR"
@@ -23,6 +25,25 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      # Set Env
+      - name: Set Environment
+        run: |
+          case "${{ github.base_ref }}" in
+            dev)
+              echo "ENV=dev" >> $GITHUB_ENV
+              ;;
+            staging)
+              echo "ENV=staging" >> $GITHUB_ENV
+              ;;
+            main)
+              echo "ENV=production" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "Invalid Target Branch: ${{ github.base_ref }}"
+              exit 1
+              ;;
+          esac
 
       - name: List Module Folders
         run: ls -l Modules/
@@ -35,28 +56,52 @@ jobs:
 
         # TF Version
       - name: Terraform Version
+        working-directory: environments/${ENV}
         run: terraform version
 
         # Format
       - name: Terraform FMT
+        working-directory: environments/${ENV}
         run: terraform fmt -check -recursive
 
         # Initialize Terraform Without Backend
       - name: Initialize Terraform
-        run: terraform init -backend=false
+        working-directory: environments/${ENV}
+        run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Validation
       - name: Terraform Validate
+        working-directory: environments/${ENV}
         run: terraform validate
 
   tflint:
     name: TFLint
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: terraform-format-validate
 
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      # Set Env
+      - name: Set Environment
+        run: |
+          case "${{ github.base_ref }}" in
+            dev)
+              echo "ENV=dev" >> $GITHUB_ENV
+              ;;
+            staging)
+              echo "ENV=staging" >> $GITHUB_ENV
+              ;;
+            main)
+              echo "ENV=production" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "Invalid Target Branch: ${{ github.base_ref }}"
+              exit 1
+              ;;
+          esac
 
         # Terraform
       - name: Setup Terraform
@@ -66,7 +111,8 @@ jobs:
 
         # Initialize Terraform Without Backend
       - name: Terraform Init
-        run: terraform init -backend=false -var-file=environments/production/production.tfvars
+        working-directory: environments/${ENV}
+        run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Setup TFLint
       - name: Setup TFLint
@@ -94,15 +140,18 @@ jobs:
 
         # TF Init
       - name: Initialize TFLint
-        run: tflint --init
+        working-directory: environments/${ENV}
+        run: tflint --init -var-file=${ENV}.tfvars
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       # Run RFLint
       - name: Run TFLint
+        working-directory: environments/${ENV}
         run: tflint --recursive -f compact || true
 
   checkov-security-analysis:
+    if: github.event_name == 'pull_request'
     name: Checkov Security Analysis
     runs-on: ubuntu-latest
     needs: tflint
@@ -111,11 +160,30 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      # Set Env
+      - name: Set Environment
+        run: |
+          case "${{ github.base_ref }}" in
+            dev)
+              echo "ENV=dev" >> $GITHUB_ENV
+              ;;
+            staging)
+              echo "ENV=staging" >> $GITHUB_ENV
+              ;;
+            main)
+              echo "ENV=production" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "Invalid target branch: ${{ github.base_ref }}"
+              exit 1
+              ;;
+          esac
+
       #  Run Checkov
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: .
+          directory: environments/${ENV}
           framework: terraform
           check: CKV_AZURE_*
           soft_fail: false
