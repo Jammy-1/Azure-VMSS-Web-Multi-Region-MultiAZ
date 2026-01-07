@@ -23,21 +23,31 @@ jobs:
       # Set Env
       - name: Set Environment
         run: |
-          case "${{ github.base_ref }}" in
-            dev)
-              echo "ENV=dev" >> $GITHUB_ENV
-              ;;
-            staging)
-              echo "ENV=staging" >> $GITHUB_ENV
-              ;;
-            main)
-              echo "ENV=production" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "Invalid Target Branch: ${{ github.base_ref }}"
-              exit 1
-              ;;
-          esac
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+                BRANCH="${{ github.base_ref }}"
+              else
+                BRANCH="${{ github.ref_name }}"
+              fi
+
+              case "$BRANCH" in
+                dev)
+                  ENV=dev
+                  ;;
+                staging)
+                  ENV=staging
+                  ;;
+                main)
+                  ENV=production
+                  ;;
+                *)
+                  echo "Invalid Target Branch: $BRANCH"
+                  exit 1
+                  ;;
+              esac
+
+              echo "ENV=$ENV" >> $GITHUB_ENV
+              echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
+              echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
       - name: List Module Folders
         run: ls -l Modules/
@@ -81,21 +91,31 @@ jobs:
       # Set Env
       - name: Set Environment
         run: |
-          case "${{ github.base_ref }}" in
-            dev)
-              echo "ENV=dev" >> $GITHUB_ENV
-              ;;
-            staging)
-              echo "ENV=staging" >> $GITHUB_ENV
-              ;;
-            main)
-              echo "ENV=production" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "Invalid Target Branch: ${{ github.base_ref }}"
-              exit 1
-              ;;
-          esac
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+              BRANCH="${{ github.base_ref }}"
+            else
+              BRANCH="${{ github.ref_name }}"
+            fi
+
+            case "$BRANCH" in
+              dev)
+                ENV=dev
+                ;;
+              staging)
+                ENV=staging
+                ;;
+              main)
+                ENV=production
+                ;;
+              *)
+                echo "Invalid Target Branch: $BRANCH"
+                exit 1
+                ;;
+            esac
+
+            echo "ENV=$ENV" >> $GITHUB_ENV
+            echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
+            echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
         # Terraform
       - name: Setup Terraform
@@ -157,21 +177,31 @@ jobs:
       # Set Env
       - name: Set Environment
         run: |
-          case "${{ github.base_ref }}" in
-            dev)
-              echo "ENV=dev" >> $GITHUB_ENV
-              ;;
-            staging)
-              echo "ENV=staging" >> $GITHUB_ENV
-              ;;
-            main)
-              echo "ENV=production" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "Invalid target branch: ${{ github.base_ref }}"
-              exit 1
-              ;;
-          esac
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+                BRANCH="${{ github.base_ref }}"
+              else
+                BRANCH="${{ github.ref_name }}"
+              fi
+
+              case "$BRANCH" in
+                dev)
+                  ENV=dev
+                  ;;
+                staging)
+                  ENV=staging
+                  ;;
+                main)
+                  ENV=production
+                  ;;
+                *)
+                  echo "Invalid Target Branch: $BRANCH"
+                  exit 1
+                  ;;
+              esac
+
+              echo "ENV=$ENV" >> $GITHUB_ENV
+              echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
+              echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
       #  Run Checkov
       - name: Run Checkov
