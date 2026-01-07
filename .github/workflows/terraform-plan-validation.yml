@@ -11,21 +11,54 @@ jobs:
   Terraform-Staging-Plan-Validation:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: List Module Folders
-        run: ls -l Modules/
-
-      - name: Confirm Staging Environment File
+      # Determine Environment & TFVARS File Based On Branch That Static Analsis Ran On
+      - name: Determine Environment
         run: |
-          ENV_FILE=environments/staging/staging.tfvars
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "Staging TFVARS File Missing"
+          case "${{ github.event.workflow_run.head_branch }}" in
+            dev)
+              ENV="dev"
+              ;;
+            staging)
+              ENV="staging"
+              ;;
+            main)
+              ENV="production"
+              ;;
+            *)
+              echo "Invalid Target Branch ${{ github.event.workflow_run.head_branch }}"
+              exit 1
+              ;;
+          esac
+
+          echo "ENV=$ENV" >> $GITHUB_ENV
+
+          echo "ENV=$ENV" >> $GITHUB_ENV
+          echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
+          echo "Using TFVARS file: environments/${ENV}/${ENV}.tfvars"
+
+      # Confirm TFVARS exists
+      - name: Confirm TFVARS File
+        run: |
+          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
+            echo "Unable To Find: ${{ env.TFVARS_FILE }}"
             exit 1
           fi
-          echo "Found Staging.tfvars"
+          echo "Found: ${{ env.TFVARS_FILE }}"
+
+      # Remove Backend Block File
+      - name: Remove Backend.tf
+        run: |
+          rm -f backend.tf
+          echo "Backend.tf Removed Successfully"
+
+      # List Modules
+      - name: List Module Folders
+        run: ls -l Modules/
 
       # Terraform
       - name: Setup Terraform
@@ -35,7 +68,7 @@ jobs:
 
       # Terraform init
       - name: Initialize Terraform
-        run: terraform -chdir=environments/staging init -backend=false
+        run: terraform init
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -49,9 +82,8 @@ jobs:
       # Terraform Plan
       - name: Terraform Staging Plan
         run: |
-          terraform -chdir=environments/staging plan \
-            -refresh=false \
-            -var-file=staging.tfvars \
+          terraform plan \
+            -var-file="environments/${ENV}/${ENV}.tfvars" \
             -var="ssh_public_key_path=${{ secrets.VMSS_SSH_PUBLIC_KEY }}" \
             -out=tfplan
         env:
