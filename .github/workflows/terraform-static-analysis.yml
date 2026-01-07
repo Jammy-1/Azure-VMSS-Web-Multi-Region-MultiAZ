@@ -60,22 +60,22 @@ jobs:
 
         # TF Version
       - name: Terraform Version
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: terraform version
 
         # Format
       - name: Terraform FMT
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: terraform fmt -check -recursive
 
         # Initialize Terraform Without Backend
       - name: Initialize Terraform
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Validation
       - name: Terraform Validate
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: terraform validate
 
   tflint:
@@ -125,7 +125,7 @@ jobs:
 
         # Initialize Terraform Without Backend
       - name: Terraform Init
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Setup TFLint
@@ -154,14 +154,14 @@ jobs:
 
         # TF Init
       - name: Initialize TFLint
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: tflint --init -var-file=${ENV}.tfvars
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       # Run RFLint
       - name: Run TFLint
-        working-directory: environments/${ENV}
+        working-directory: environments/${{ env.ENV }}
         run: tflint --recursive -f compact || true
 
   checkov-security-analysis:
@@ -207,7 +207,7 @@ jobs:
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: environments/${ENV}
+          directory: environments/${{ env.ENV }}
           framework: terraform
           check: CKV_AZURE_*
           soft_fail: false
