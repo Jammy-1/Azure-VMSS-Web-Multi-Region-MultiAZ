@@ -181,17 +181,17 @@ jobs:
 
         # TF Init
       - name: Initialize TFLint
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: tflint --init
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       # Run RFLint
       - name: Run TFLint
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: |
           echo "Running TFLint..."
-          tflint --recursive -format checkstyle
+          tflint --recursive --format stylish --var-file="${{ env.TFVARS_FILE }}"
 
   checkov-security-analysis:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
