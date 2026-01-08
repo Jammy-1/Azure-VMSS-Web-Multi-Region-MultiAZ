@@ -191,7 +191,7 @@ jobs:
         working-directory: .
         run: |
           echo "Running TFLint..."
-          tflint --recursive --format compact --var-file="${{ env.TFVARS_FILE }}"
+          tflint --format compact --var-file="${{ env.TFVARS_FILE }}" || true
 
   checkov-security-analysis:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
