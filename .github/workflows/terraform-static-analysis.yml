@@ -191,7 +191,7 @@ jobs:
         working-directory: environments/${{ env.ENV }}
         run: |
           echo "Running TFLint..."
-          tflint --recursive -f stylish
+          tflint --recursive -format checkstyle
 
   checkov-security-analysis:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
