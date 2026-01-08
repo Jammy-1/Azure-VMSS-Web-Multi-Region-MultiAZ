@@ -155,7 +155,7 @@ jobs:
         # TF Init
       - name: Initialize TFLint
         working-directory: environments/${{ env.ENV }}
-        run: tflint --init -var-file=${ENV}.tfvars
+        run: tflint --init
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
