@@ -49,6 +49,19 @@ jobs:
               echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
               echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
+        # Clear Cahce
+      - name: Clear Cache
+        run: |
+          echo "Cleaning Cache..."
+
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
+
+          rm -rf environments/${ENV}/.terraform
+          rm -f environments/${ENV}/.terraform.lock.hcl
+
+          echo "Cleanup Complete"
+
       - name: List Module Folders
         run: ls -l Modules/
 
@@ -117,6 +130,20 @@ jobs:
               echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
               echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
+        # Clear Cache
+      - name: Clear Cache
+        run: |
+          echo "Cleaning Cache..."
+
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
+          rm -rf ~/.tflint.d
+
+          rm -rf environments/${ENV}/.terraform
+          rm -f environments/${ENV}/.terraform.lock.hcl
+
+          echo "Cleanup Complete."
+
         # Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -162,7 +189,7 @@ jobs:
       # Run RFLint
       - name: Run TFLint
         working-directory: environments/${{ env.ENV }}
-        run: tflint --recursive -f compact || true
+        run: tflint --recursive -f compact --loglevel=info || true
 
   checkov-security-analysis:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
@@ -203,6 +230,20 @@ jobs:
               echo "TFVARS_FILE=environments/$ENV/$ENV.tfvars" >> $GITHUB_ENV
               echo "Using TFVARS file: environments/$ENV/$ENV.tfvars"
 
+        # Clear Cache
+      - name: Clear Cache
+        run: |
+          echo "Cleaning Cache..."
+
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
+          rm -rf ~/.checkov
+
+          rm -rf environments/${ENV}/.terraform
+          rm -f environments/${ENV}/.terraform.lock.hcl
+
+          echo "Cleanup Complete."
+
       #  Run Checkov
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@v12
@@ -213,6 +254,7 @@ jobs:
           soft_fail: false
           output_format: cli
           download_external_modules: true
+          log_level: DEBUG
 
           # HTTP (160) - Storage Account Replication(206) - Storage Queue Logging (33) - Storage Blob Restrict Public Access (190) - Storage accounts disallow public access(59) -VMSS have encryption at host enabled (97)
           skip_check: CKV_AZURE_160,CKV_AZURE_206,CKV_AZURE_33,CKV_AZURE_190,CKV_AZURE_59,CKV_AZURE_97
