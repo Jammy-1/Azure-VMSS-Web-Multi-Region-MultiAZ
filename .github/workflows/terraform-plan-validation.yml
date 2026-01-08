@@ -9,17 +9,24 @@ on:
 
 jobs:
   Terraform-Staging-Plan-Validation:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # Determine Environment & TFVARS File Based On Branch That Static Analsis Ran On
+      # Determine Environment & TFVARS File Based On Branch That Static Analsis Ran On - Workflow Dispatch
       - name: Determine Environment
         run: |
-          case "${{ github.event.workflow_run.head_branch }}" in
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            BRANCH="${{ github.ref_name }}"
+          else
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+          fi
+
+          # Map branch to environment
+          case "$BRANCH" in
             dev)
               ENV="dev"
               ;;
@@ -30,16 +37,14 @@ jobs:
               ENV="production"
               ;;
             *)
-              echo "Invalid Target Branch ${{ github.event.workflow_run.head_branch }}"
+              echo "Invalid Target Branch: $BRANCH"
               exit 1
               ;;
           esac
 
           echo "ENV=$ENV" >> $GITHUB_ENV
-
-          echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
-          echo "Using TFVARS file: environments/${ENV}/${ENV}.tfvars"
+          echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
 
       # Confirm TFVARS exists
       - name: Confirm TFVARS File
@@ -49,6 +54,19 @@ jobs:
             exit 1
           fi
           echo "Found: ${{ env.TFVARS_FILE }}"
+
+      # Clear Cahce
+      - name: Clear Cache
+        run: |
+          echo "Cleaning Cache..."
+
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
+
+          rm -rf environments/${ENV}/.terraform
+          rm -f environments/${ENV}/.terraform.lock.hcl
+
+          echo "Cleanup Complete"
 
       # Remove Backend Block File
       - name: Remove Backend.tf
