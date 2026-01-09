@@ -6,28 +6,66 @@ on:
     workflows: ["Terraform Plan Validation"]
     types:
       - completed
-  push:
-    branches: [main]
 
 jobs:
   backend-check:
-    if: >
-      github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Backend Environment File
+      # Determine Environment & TFVARS File Based On Branch That Static Analsis Ran On - Workflow Dispatch
+      - name: Determine Environment
         run: |
-          ENV_FILE=environments/backend/backend.tfvars
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "Backend TFVARS File Missing"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            BRANCH="${{ github.ref_name }}"
+          else
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+          fi
+
+          case "$BRANCH" in
+            dev)
+              ENV="dev"
+              ;;
+            staging)
+              ENV="staging"
+              ;;
+            main)
+              ENV="production"
+              ;;
+            *)
+              echo "Invalid Target Branch: $BRANCH"
+              exit 1
+              ;;
+          esac
+
+          echo "ENV=$ENV" >> $GITHUB_ENV
+          echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
+          echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+
+      # Confirm TFVARS exists
+      - name: Confirm TFVARS File
+        run: |
+          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
+            echo "Unable To Find: ${{ env.TFVARS_FILE }}"
             exit 1
           fi
-          echo "Found Backend.tfvars"
+          echo "Found: ${{ env.TFVARS_FILE }}"
+
+      # Clear Cahce
+      - name: Clear Cache
+        run: |
+          echo "Cleaning Cache..."
+
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
+
+          rm -rf environments/${ENV}/.terraform
+          rm -f environments/${ENV}/.terraform.lock.hcl
+
+          echo "Cleanup Complete"
 
         # Azure Authentication
       - name: Azure Login
@@ -38,22 +76,30 @@ jobs:
             --tenant ${{ secrets.AZURE_TENANT_ID }}
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Load Backend Variables
+        # Determine Variables
+      - name: Determine Backend Variables
         run: |
-          RG=$(grep -E '^resource_group_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' environments/backend/backend.tfvars | awk -F'=' '{print $2}' | xargs)
+          BACKEND_FILE="environments/${ENV}/${ENV}.tfvars"
 
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-          KEY="${KEY//$'\r'/}"
+          if [ ! -f "$BACKEND_FILE" ]; then
+           echo "Backend TFVARS file not found: $BACKEND_FILE"
+           exit 1
+          fi
 
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+           RG=$(grep -E '^resource_group_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+           SA=$(grep -E '^storage_account_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+           CONTAINER=$(grep -E '^storage_container_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+           KEY=$(grep -E '^state_key' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+
+           RG="${RG//$'\r'/}"
+           SA="${SA//$'\r'/}"
+           CONTAINER="${CONTAINER//$'\r'/}"
+           KEY="${KEY//$'\r'/}"
+
+           echo "RG_NAME=$RG" >> $GITHUB_ENV
+           echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
         # Backend Variables Value
       - name: Backend Variables Values
