@@ -20,7 +20,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # Set Env Basen On Branch Pull
+      # Set Env Based On Branch Pull
       - name: Determine Environment
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
@@ -101,8 +101,8 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # Set Env
-      - name: Set Environment
+        # Set Env Based On Branch Pul
+      - name: Determine Environment
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
                 BRANCH="${{ github.base_ref }}"
@@ -152,7 +152,7 @@ jobs:
 
         # Initialize Terraform Without Backend
       - name: Terraform Init
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Setup TFLint
@@ -204,7 +204,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Set Env
-      - name: Set Environment
+      - name: Determine Environment
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
                 BRANCH="${{ github.base_ref }}"
