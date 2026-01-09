@@ -20,8 +20,8 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # Set Env
-      - name: Set Environment
+      # Set Env Basen On Branch Pull
+      - name: Determine Environment
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
                 BRANCH="${{ github.base_ref }}"
@@ -73,22 +73,22 @@ jobs:
 
         # TF Version
       - name: Terraform Version
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: terraform version
 
         # Format
       - name: Terraform FMT
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: terraform fmt -check -recursive
 
         # Initialize Terraform Without Backend
       - name: Initialize Terraform
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: terraform init -backend=false -var-file=${ENV}.tfvars
 
         # Validation
       - name: Terraform Validate
-        working-directory: environments/${{ env.ENV }}
+        working-directory: .
         run: terraform validate
 
   tflint:
