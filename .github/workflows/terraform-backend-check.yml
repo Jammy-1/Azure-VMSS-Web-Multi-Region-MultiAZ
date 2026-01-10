@@ -12,6 +12,9 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
+    outputs:
+      env_name: ${{ steps.set-env.outputs.env }}
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -44,6 +47,7 @@ jobs:
           echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
           echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+          echo "env=$ENV" >> $GITHUB_OUTPUT
 
       # Confirm TFVARS exists
       - name: Confirm TFVARS File
@@ -155,12 +159,16 @@ jobs:
 
           echo "Terraform Backend And State Key Exist"
 
-  trigger-production-deployment:
-    name: Trigger Production Deployment
+  trigger-infra-deployment:
+    name: Trigger Infrastructure Deployment
     runs-on: ubuntu-latest
     needs: backend-check
+
+    env:
+      ENV: ${{ needs.backend-check.outputs.env_name }}
+
     steps:
-      - name: Production Workflow Trigger
+      - name: Deployment Workflow Trigger
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
@@ -168,6 +176,9 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: "terraform-production-deployment.yml",
-              ref: "main"
+              workflow_id: "terraform-infrastructure-deployment.yml",
+              ref: context.ref,
+              inputs: {
+              environment: process.env.ENV
+              }
             });
