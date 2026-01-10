@@ -21,11 +21,11 @@ jobs:
       - name: Determine Environment From Trigger In Backnd Check
         run: |
           ENV="${{ github.event.inputs.environment }}"
-          TFVARS_FILE="environments/${ENV}/backend.tfvars"
+          TFVARS_FILE="../../${ENV}/backend.tfvars"
 
           echo "ENV=$ENV" >> $GITHUB_ENV
-          echo "TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
-          echo "Using TFVARS file: ${{ env.TFVARS_FILE }}"
+          echo "TFVARS_FILE=$TFVARS_FILE"" >> $GITHUB_ENV
+          echo "Using TFVARS File: ${{ env.TFVARS_FILE }}"
           echo "env=$ENV" >> $GITHUB_OUTPUT
 
       # Confirm Backend TFVARS exists
@@ -66,7 +66,9 @@ jobs:
       # Set Environment Output
       - name: Set Environment Output
         id: set-env
-        run: echo "env=${ENV}" >> $GITHUB_OUTPUT
+        run: |
+          echo "Environment Detected: $ENV"
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Clear Cahce
       - name: Clear Cache
@@ -259,7 +261,5 @@ jobs:
               repo: context.repo.repo,
               workflow_id: "terraform-infrastructure-deployment.yml",
               ref: context.ref,
-              inputs: {
-                environment: process.env.ENV
-              }
+              inputs: { environment: process.env.ENV }
             });
