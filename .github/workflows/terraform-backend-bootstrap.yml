@@ -40,7 +40,8 @@ jobs:
 
            echo "ENV=$ENV" >> $GITHUB_ENV
            echo "TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
-           echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+           echo "Environment Detected: $ENV"
+           echo "Using TFVARS File: environments/${ENV}/backend.tfvars"
 
         # Set Environment Output
       - name: Set Environment Output
@@ -131,7 +132,7 @@ jobs:
             -target=module.storage.azurerm_storage_account.this \
             -target=module.storage.azurerm_storage_container.this \
             -var="enable_storage_diagnostics=false" \
-            -var-file=${{ env.TFVARS_FILE }} \
+            -var-file=../../${ENV}/backend.tfvars \
             -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -202,7 +203,7 @@ jobs:
             -target=module.event-hub.azurerm_eventhub_namespace_authorization_rule.this \
             -target=module.storage.azurerm_monitor_diagnostic_setting.blob_logs \
             -var="enable_storage_diagnostics=true" \
-            -var-file=${{ env.TFVARS_FILE }} \
+            -var-file=../../${ENV}/backend.tfvars \
             -out=tfplan
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
