@@ -83,7 +83,7 @@ jobs:
         # Determine Variables
       - name: Determine Backend Variables
         run: |
-          BACKEND_FILE="environments/${ENV}/${ENV}.tfvars"
+          BACKEND_FILE="environments/${ENV}/backend.tfvars"
 
           if [ ! -f "$BACKEND_FILE" ]; then
            echo "Backend TFVARS file not found: $BACKEND_FILE"
@@ -163,6 +163,7 @@ jobs:
     name: Trigger Infrastructure Deployment
     runs-on: ubuntu-latest
     needs: backend-check
+    if: needs.backend-check.result == 'success'
 
     env:
       ENV: ${{ needs.backend-check.outputs.env_name }}
@@ -180,5 +181,30 @@ jobs:
               ref: context.ref,
               inputs: {
               environment: process.env.ENV
+              }
+            });
+
+  trigger-backend-bootstrap:
+    name: Trigger Backend Bootstrap
+    runs-on: ubuntu-latest
+    needs: backend-check
+    if: needs.backend-check.result == 'failure'
+
+    env:
+      ENV: ${{ needs.backend-check.outputs.env_name }}
+
+    steps:
+      - name: Trigger Bootstrap Workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "terraform-backend-bootstrap.yml",
+              ref: context.ref,
+              inputs: {
+                environment: process.env.ENV
               }
             });
