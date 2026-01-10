@@ -32,7 +32,7 @@ resource "azurerm_storage_container" "this" {
 
 # State Key
 resource "azurerm_storage_blob" "this" {
-  name                   = var.state_key
+  name                   = var.state_key_backend
   storage_account_name   = var.storage_account_name
   storage_container_name = var.storage_container_name
   type                   = "Block"

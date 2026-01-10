@@ -5,7 +5,8 @@ location            = "uksouth"
 # Storage 
 storage_account_name   = "devtfstatestoragemstf"
 storage_container_name = "devtfstatecontainermstf"
-state_key              = "backend/terraform.tfstate"
+state_key_backend      = "backend/terraform.tfstate"
+state_key_deployment   = "development/terraform.tfstate"
 
 # Event Hub 
 eventhub_namespace      = "website-namespace-mstf-development"

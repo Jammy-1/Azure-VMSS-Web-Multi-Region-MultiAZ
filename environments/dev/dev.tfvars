@@ -14,11 +14,6 @@ vmss_tags = {
   tier = "web"
 }
 
-# Storage 
-storage_account_name   = "devtfstatestoragemstf"
-storage_container_name = "devtfstatecontainermstf"
-state_key              = "development/terraform.tfstate"
-
 # VNet
 vnet_name          = "vnet-static"
 vnet_address_space = ["10.0.0.0/16"]
