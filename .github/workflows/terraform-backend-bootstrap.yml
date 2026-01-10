@@ -19,6 +19,7 @@ jobs:
 
       # Trigged From Backend Check Job - Trigger-backend-bootstrap
       - name: Determine Environment From Trigger In Backnd Check
+        working-directory: environments/backend/bootstrap
         run: |
           ENV="${{ github.event.inputs.environment }}"
           TFVARS_FILE="../../${ENV}/backend.tfvars"
@@ -30,6 +31,7 @@ jobs:
 
       # Confirm Backend TFVARS exists
       - name: Confirm Backend TFVARS File
+        working-directory: environments/backend/bootstrap
         run: |
           if [ ! -f "$TFVARS_FILE" ]; then
             echo "Backend TFVARS File Missing: $TFVARS_FILE"
