@@ -14,8 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Trigged From Backend Check Job - Trigger-backend-bootstrap
-      - name: Determine Environment From Trigger In Backnd Check
-        working-directory: environments/backend/bootstrap
+      - name: Determine Environment From Backend Check
         run: |
           if [ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]; then
              BRANCH="${GITHUB_REF#refs/heads/}"
@@ -40,27 +39,49 @@ jobs:
            esac
 
            echo "ENV=$ENV" >> $GITHUB_ENV
-           echo "TFVARS_FILE=../../${ENV}/backend.tfvars" >> $GITHUB_ENV
-           echo "Using TFVARS File: ../../${ENV}/backend.tfvars"
-           echo "env=$ENV" >> $GITHUB_OUTPUT
+           echo "TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
+           echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+
+        # Set Environment Output
+      - name: Set Environment Output
+        id: set-env
+        run: |
+          echo "Environment Detected: $ENV"
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
+
+        # Confirm Backend exists
+      - name: Confirm TFVARS File
+        run: |
+          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
+            echo "Unable To Find: ${{ env.TFVARS_FILE }}"
+            exit 1
+          fi
+          echo "Found: ${{ env.TFVARS_FILE }}"
 
         # Load Backend Variables
-      - name: Load Backend Variables
+      - name: Determine Backend Variables
         run: |
-          RG=$(grep -E '^resource_group_name' "${{ env.TFVARS_FILE }}" | awk -F'=' '{print $2}' | xargs)
-          SA=$(grep -E '^storage_account_name' "${{ env.TFVARS_FILE }}" | awk -F'=' '{print $2}' | xargs)
-          CONTAINER=$(grep -E '^storage_container_name' "${{ env.TFVARS_FILE }}" | awk -F'=' '{print $2}' | xargs)
-          KEY=$(grep -E '^state_key' "${{ env.TFVARS_FILE }}" | awk -F'=' '{print $2}' | xargs)
+          BACKEND_FILE="environments/${ENV}/backend.tfvars"
+            
+          if [ ! -f "$BACKEND_FILE" ]; then
+           echo "Backend TFVARS file not found: $BACKEND_FILE"
+           exit 1
+          fi
 
-          RG="${RG//$'\r'/}"
-          SA="${SA//$'\r'/}"
-          CONTAINER="${CONTAINER//$'\r'/}"
-          KEY="${KEY//$'\r'/}"
+            RG=$(grep -E '^resource_group_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+            SA=$(grep -E '^storage_account_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+            CONTAINER=$(grep -E '^storage_container_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+            KEY=$(grep -E '^state_key' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
 
-          echo "RG_NAME=$RG" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
-          echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-          echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+            RG="${RG//$'\r'/}"
+            SA="${SA//$'\r'/}"
+            CONTAINER="${CONTAINER//$'\r'/}"
+            KEY="${KEY//$'\r'/}"
+
+            echo "RG_NAME=$RG" >> $GITHUB_ENV
+            echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
+            echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
+            echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
       # Confirm Backend Variables
       - name: Confirm Backend Variables
@@ -69,13 +90,6 @@ jobs:
           echo "Storage Account Name      : ${{ env.STORAGE_ACCOUNT_NAME }}"
           echo "Storage Container Name    : ${{ env.STORAGE_CONTAINER_NAME }}"
           echo "Terraform State Key       : ${{ env.STATE_KEY }}"
-
-      # Set Environment Output
-      - name: Set Environment Output
-        id: set-env
-        run: |
-          echo "Environment Detected: $ENV"
-          echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Clear Cahce
       - name: Clear Cache
