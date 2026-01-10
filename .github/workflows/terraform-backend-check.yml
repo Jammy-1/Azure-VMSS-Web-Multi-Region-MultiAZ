@@ -52,7 +52,9 @@ jobs:
       # Set Environment Output
       - name: Set Environment Output
         id: set-env
-        run: echo "env=${ENV}" >> $GITHUB_OUTPUT
+        run: |
+          echo "Environment Detected: $ENV"
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Confirm TFVARS exists
       - name: Confirm TFVARS File
@@ -119,6 +121,7 @@ jobs:
           echo "STATE_KEY=$STATE_KEY"
 
       - name: Check Terraform Backend Exists
+        id: set-backend
         shell: bash
         run: |
           echo "Checking Terraform Backend"
@@ -131,25 +134,23 @@ jobs:
 
           # Storage Account
           echo "Checking Storage Account..."
-          az storage account show \
+          if ! az storage account show \
             --name "$STORAGE_ACCOUNT_NAME" \
             --resource-group "$RG_NAME" \
-            --output none
-          if [[ $? -ne 0 ]]; then
-            echo "Storage Account Missing"
-            backend_exists=false
+            --output none; then
+              echo "Storage Account Missing"
+              backend_exists=false
           fi
 
           # Container
           echo "Checking Container..."
-          az storage container show \
+          if ! az storage container show \
             --name "$STORAGE_CONTAINER_NAME" \
             --account-name "$STORAGE_ACCOUNT_NAME" \
             --auth-mode login \
-            --output none
-          if [[ $? -ne 0 ]]; then
-            echo "Container Missing"
-            backend_exists=false
+            --output none; then
+              echo "Container Missing"
+              backend_exists=false
           fi  
 
           # State Key
@@ -161,17 +162,20 @@ jobs:
             --account-name "$STORAGE_ACCOUNT_NAME" \
             --auth-mode login \
             --query exists \
-            --output tsv)
+            --output tsv 2>/dev/null)
 
           if [[ "$BLOB_EXISTS" != "true" ]]; then
             echo "Backend Missing"
-            echo "::set-output name=backend_exists::false"
-            echo "backend_exists=false" >> $GITHUB_ENV
+            backend_exists=false
           else
             echo "Backend Exists"
-            echo "::set-output name=backend_exists::true"
-            echo "backend_exists=true" >> $GITHUB_ENV
           fi
+
+          echo "Backend Exists: $backend_exists"
+
+          # Set Output For Triggers
+          echo "::set-output name=backend_exists::$backend_exists"
+          echo "backend_exists=$backend_exists" >> $GITHUB_ENV
 
   trigger-infra-deployment:
     name: Trigger Infrastructure Deployment
