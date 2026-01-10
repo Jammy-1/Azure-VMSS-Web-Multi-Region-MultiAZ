@@ -141,7 +141,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # Terraform Apply - Backend - RG & Storage - Bootstrap Folder
-      - name: Terraform Apply Backend Bootstrap
+      - name: Terraform Apply Resource-Group & Storage
         working-directory: environments/backend/bootstrap
         run: terraform apply -auto-approve tfplan
         env:
@@ -269,12 +269,12 @@ jobs:
     needs: backend-bootstrap
     if: needs.backend-bootstrap.result == 'success'
 
+    env:
+      ENV: ${{ needs.backend-bootstrap.outputs.env_name }}
+
     steps:
       - name: Infrastructure Deployment Trigger
         uses: actions/github-script@v6
-        env:
-          env: ${{ needs.backend-bootstrap.outputs.env_name }}
-
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
