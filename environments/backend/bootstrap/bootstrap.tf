@@ -26,7 +26,7 @@ module "storage" {
   resource_group_name    = var.resource_group_name
   storage_account_name   = var.storage_account_name
   storage_container_name = var.storage_container_name
-  state_key              = var.state_key
+  state_key_backend      = var.state_key_backend
   location               = var.location
 
   depends_on = [module.resource-group]
