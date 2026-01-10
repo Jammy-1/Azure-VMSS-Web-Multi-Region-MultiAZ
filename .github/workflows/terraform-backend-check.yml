@@ -169,7 +169,7 @@ jobs:
             set +e
             BLOB_EXISTS=$(az storage blob exists \
               --container-name "$STORAGE_CONTAINER_NAME" \
-              --name "$STATE_KEY" \
+              --name "$STATE_KEY_BACKEND" \
               --account-name "$STORAGE_ACCOUNT_NAME" \
               --auth-mode login \
               --query exists \
