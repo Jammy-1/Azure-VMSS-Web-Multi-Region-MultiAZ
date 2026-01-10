@@ -47,7 +47,11 @@ jobs:
           echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
           echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
-          echo "env=$ENV" >> $GITHUB_OUTPUT
+
+      # Set Environment Output
+      - name: Set Environment Output
+        id: set-env
+        run: echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Confirm TFVARS exists
       - name: Confirm TFVARS File
