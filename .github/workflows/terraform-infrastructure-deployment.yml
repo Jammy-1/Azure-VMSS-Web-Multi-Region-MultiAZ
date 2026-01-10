@@ -82,10 +82,10 @@ jobs:
       - name: List Module Folders
         run: ls -l Modules/
 
-      # Determine Backend Variables Based On Branch
-      - name: Determine Backend Variables Based On Branch
+      # Determine Backend Variables Based On Branch - Using Env TFVARS
+      - name: Determine Variables - Backend Based on Env
         run: |
-          BACKEND_FILE="environments/${ENV}/backend.tfvars"
+          BACKEND_FILE="environments/${ENV}/${ENV}.tfvars"
 
           if [ ! -f "$BACKEND_FILE" ]; then
            echo "Backend TFVARS file not found: $BACKEND_FILE"
