@@ -14,6 +14,7 @@ jobs:
 
     outputs:
       env_name: ${{ steps.set-env.outputs.env }}
+      backend_exists: ${{ steps.set-backend.outputs.backend_exists }}
 
     steps:
       - name: Checkout Repo
