@@ -121,13 +121,13 @@ jobs:
       - name: Check Terraform Backend Exists
         shell: bash
         run: |
-          set -e
-
           echo "Checking Terraform Backend"
           echo "RG        : $RG_NAME"
           echo "Storage   : $STORAGE_ACCOUNT_NAME"
           echo "Container : $STORAGE_CONTAINER_NAME"
           echo "State Key : $STATE_KEY"
+
+          backend_exists=true
 
           # Storage Account
           echo "Checking Storage Account..."
@@ -135,6 +135,10 @@ jobs:
             --name "$STORAGE_ACCOUNT_NAME" \
             --resource-group "$RG_NAME" \
             --output none
+          if [[ $? -ne 0 ]]; then
+            echo "Storage Account Missing"
+            backend_exists=false
+          fi
 
           # Container
           echo "Checking Container..."
@@ -143,6 +147,10 @@ jobs:
             --account-name "$STORAGE_ACCOUNT_NAME" \
             --auth-mode login \
             --output none
+          if [[ $? -ne 0 ]]; then
+            echo "Container Missing"
+            backend_exists=false
+          fi  
 
           # State Key
           echo "Checking State Key..."
@@ -154,7 +162,6 @@ jobs:
             --auth-mode login \
             --query exists \
             --output tsv)
-          set -e
 
           if [[ "$BLOB_EXISTS" != "true" ]]; then
             echo "Backend Missing"
