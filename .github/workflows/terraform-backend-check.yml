@@ -208,7 +208,6 @@ jobs:
               repo: context.repo.repo,
               workflow_id: "terraform-infrastructure-deployment.yml",
               ref: context.ref,
-              inputs: { environment: process.env.ENV }
             });
 
   trigger-backend-bootstrap:
@@ -231,5 +230,4 @@ jobs:
               repo: context.repo.repo,
               workflow_id: "terraform-backend-bootstrap.yml",
               ref: context.ref,
-              inputs: { environment: process.env.ENV }
             });
