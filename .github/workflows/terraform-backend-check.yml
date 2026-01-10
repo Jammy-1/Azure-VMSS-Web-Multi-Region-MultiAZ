@@ -185,7 +185,7 @@ jobs:
           fi
 
            # Set Output For Triggers
-          echo "::set-output name=backend_exists::$backend_exists"
+          echo "backend_exists=$backend_exists" >> $GITHUB_OUTPUT
           echo "backend_exists=$backend_exists" >> $GITHUB_ENV
 
   trigger-infra-deployment:
