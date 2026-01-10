@@ -20,8 +20,8 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      # Determine Environment & TFVARS File Based On Branch That Static Analsis Ran On - Workflow Dispatch
-      - name: Determine Environment
+      # Determine Environment & Backend TFVARS File Based On Branch That Static Analsis Ran On - Workflow Dispatch
+      - name: Determine Branch Environment
         run: |
           if [ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]; then
             BRANCH="${GITHUB_REF#refs/heads/}"
@@ -46,8 +46,8 @@ jobs:
           esac
 
           echo "ENV=$ENV" >> $GITHUB_ENV
-          echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
-          echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+          echo "TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
+          echo "Using TFVARS File: environments/${ENV}/backend.tfvars"
 
       # Set Environment Output
       - name: Set Environment Output
@@ -57,7 +57,7 @@ jobs:
           echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Confirm TFVARS exists
-      - name: Confirm TFVARS File
+      - name: Confirm Backend TFVARS File
         run: |
           if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
             echo "Unable To Find: ${{ env.TFVARS_FILE }}"
@@ -100,7 +100,7 @@ jobs:
            RG=$(grep -E '^resource_group_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
            SA=$(grep -E '^storage_account_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
            CONTAINER=$(grep -E '^storage_container_name' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
-           KEY=$(grep -E '^state_key' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
+           KEY=$(grep -E '^state_key_backend' "$BACKEND_FILE" | awk -F'=' '{print $2}' | xargs)
 
            RG="${RG//$'\r'/}"
            SA="${SA//$'\r'/}"
@@ -110,7 +110,7 @@ jobs:
            echo "RG_NAME=$RG" >> $GITHUB_ENV
            echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
            echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
-           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
+           echo "STATE_KEY_BACKEND=$KEY" >> $GITHUB_ENV
 
         # Backend Variables Value
       - name: Backend Variables Values
@@ -118,7 +118,7 @@ jobs:
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-          echo "STATE_KEY=$STATE_KEY"
+          echo "STATE_KEY_BACKEND=$STATE_KEY"
 
       - name: Check Terraform Backend Exists
         id: set-backend
@@ -128,7 +128,7 @@ jobs:
           echo "RG        : $RG_NAME"
           echo "Storage   : $STORAGE_ACCOUNT_NAME"
           echo "Container : $STORAGE_CONTAINER_NAME"
-          echo "State Key : $STATE_KEY"
+          echo "Backend State Key : $STATE_KEY"
 
           backend_exists=true
 
