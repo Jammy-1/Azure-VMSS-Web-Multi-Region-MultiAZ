@@ -182,6 +182,7 @@ jobs:
               echo "Backend Exists"
             fi
             echo "Backend Exists: $backend_exists"
+          fi
 
            # Set Output For Triggers
           echo "::set-output name=backend_exists::$backend_exists"
