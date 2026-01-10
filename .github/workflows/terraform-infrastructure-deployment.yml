@@ -1,10 +1,6 @@
 name: Terraform Infrastructure Deployment
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target Environment (dev, staging, production)"
-        required: true
 
 jobs:
   Terraform-Infrastructure-Deployment:
@@ -20,13 +16,39 @@ jobs:
       # Determine Environment Branch From Backend Check Or Backend Bootstrap Trigger
       - name: Determine Environment From Trigger - Backend / Bootstrap
         run: |
-          ENV="${{ github.event.inputs.environment }}"
-          TFVARS_FILE="environments/${ENV}/${ENV}.tfvars"
+          if [ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]; then
+              BRANCH="${GITHUB_REF#refs/heads/}"
+          else
+              BRANCH="${{ github.event.workflow_run.head_branch }}"
+          fi
 
-          echo "ENV=$ENV" >> $GITHUB_ENV
-          echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
-          echo "Using TFVARS file: ${{ env.TFVARS_FILE }}"
-          echo "env=$ENV" >> $GITHUB_OUTPUT
+          case "$BRANCH" in
+            dev)
+                ENV="dev"
+                ;;
+            staging)
+              ENV="staging"
+              ;;
+              main)
+              ENV="production"
+              ;;
+            *)
+              echo "Invalid Target Branch: $BRANCH"
+              exit 1
+              ;;
+            esac
+
+            echo "ENV=$ENV" >> $GITHUB_ENV
+            echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
+            echo "Environment Detected: $ENV"
+            echo "Using TFVARS File: environments/${ENV}/${ENV}.tfvars"
+
+      # Set Environment Output
+      - name: Set Environment Output
+        id: set-env
+        run: |
+          echo "Environment Detected: $ENV"
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Confirm TFVARS exists
       - name: Confirm TFVARS File
@@ -36,11 +58,6 @@ jobs:
             exit 1
           fi
           echo "Found: ${{ env.TFVARS_FILE }}"
-
-      # Set Environment Output
-      - name: Set Environment Output
-        id: set-env
-        run: echo "env=${ENV}" >> $GITHUB_OUTPUT
 
       # Clear Cahce
       - name: Clear Cache
@@ -90,13 +107,13 @@ jobs:
           echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
           echo "STATE_KEY=$KEY" >> $GITHUB_ENV
 
-      # Confirm Variables
-      - name: Confirm Backend Variables Values
+        # Confirm Backend Variables
+      - name: Confirm Backend Variables
         run: |
-          echo "resource_group_name=$RG_NAME"
-          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
-          echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-          echo "STATE_KEY=$STATE_KEY"
+          echo "Resource Group Name       : ${{ env.RG_NAME }}"
+          echo "Storage Account Name      : ${{ env.STORAGE_ACCOUNT_NAME }}"
+          echo "Storage Container Name    : ${{ env.STORAGE_CONTAINER_NAME }}"
+          echo "Terraform State Key       : ${{ env.STATE_KEY }}"
 
       # Terraform Init
       - name: Initialize Terraform
