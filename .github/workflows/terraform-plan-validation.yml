@@ -8,7 +8,7 @@ on:
       - completed
 
 jobs:
-  Terraform-Staging-Plan-Validation:
+  Terraform-Plan-Validation:
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -99,7 +99,7 @@ jobs:
         run: terraform version
 
       # Terraform Plan
-      - name: Terraform Staging Plan
+      - name: Terraform Plan
         run: |
           terraform plan \
             -var-file="environments/${ENV}/${ENV}.tfvars" \
