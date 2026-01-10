@@ -283,5 +283,4 @@ jobs:
               repo: context.repo.repo,
               workflow_id: "terraform-infrastructure-deployment.yml",
               ref: context.ref,
-              inputs: { environment: process.env.ENV }
             });
