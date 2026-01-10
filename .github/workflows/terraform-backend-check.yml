@@ -118,7 +118,7 @@ jobs:
           echo "resource_group_name=$RG_NAME"
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME"
           echo "STORAGE_CONTAINER_NAME=$STORAGE_CONTAINER_NAME"
-          echo "STATE_KEY_BACKEND=$STATE_KEY"
+          echo "STATE_KEY_BACKEND=$STATE_KEY_BACKEND"
 
       - name: Check Terraform Backend Exists
         id: set-backend
@@ -128,7 +128,7 @@ jobs:
           echo "RG        : $RG_NAME"
           echo "Storage   : $STORAGE_ACCOUNT_NAME"
           echo "Container : $STORAGE_CONTAINER_NAME"
-          echo "Backend State Key : $STATE_KEY"
+          echo "Backend State Key : $STATE_KEY_BACKEND"
 
           backend_exists=true
 
