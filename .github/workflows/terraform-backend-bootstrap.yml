@@ -25,17 +25,17 @@ jobs:
 
           echo "ENV=$ENV" >> $GITHUB_ENV
           echo "TFVARS_FILE=$TFVARS_FILE" >> $GITHUB_ENV
-          echo "Using TFVARS File: ${{ env.TFVARS_FILE }}"
+          echo "Using TFVARS File: $TFVARS_FILE"
           echo "env=$ENV" >> $GITHUB_OUTPUT
 
       # Confirm Backend TFVARS exists
       - name: Confirm Backend TFVARS File
         run: |
-          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
-            echo "Backend TFVARS File Missing: ${{ env.TFVARS_FILE }}"
+          if [ ! -f "$TFVARS_FILE" ]; then
+            echo "Backend TFVARS File Missing: $TFVARS_FILE"
             exit 1
           fi
-          echo "Found Backend TFVARS: ${{ env.TFVARS_FILE }}"
+          echo "Found Backend TFVARS: $TFVARS_FILE"
 
         # Load Backend Variables
       - name: Load Backend Variables
