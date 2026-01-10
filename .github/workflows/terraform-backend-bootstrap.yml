@@ -29,9 +29,13 @@ jobs:
       - name: Confirm Backend TFVARS File
         working-directory: environments/backend/bootstrap
         run: |
+          ENV="${{ github.event.inputs.environment }}"
+          TFVARS_FILE="../../${ENV}/backend.tfvars"
+
+          echo "Using TFVARS File: $TFVARS_FILE"
           if [ ! -f "$TFVARS_FILE" ]; then
-            echo "Backend TFVARS File Missing: $TFVARS_FILE"
-            exit 1
+          echo "Backend TFVARS File Missing: $TFVARS_FILE"
+          exit 1
           fi
           echo "Found Backend TFVARS: $TFVARS_FILE"
 
