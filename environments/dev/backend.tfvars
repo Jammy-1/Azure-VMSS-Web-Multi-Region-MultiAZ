@@ -4,7 +4,7 @@ location            = "uksouth"
 
 # Storage 
 storage_account_name   = "devtfstatestoragemstf"
-storage_container_name = "devfstatestoragemstf"
+storage_container_name = "devtfstatecontainermstf"
 state_key              = "backend/terraform.tfstate"
 
 # Event Hub 
