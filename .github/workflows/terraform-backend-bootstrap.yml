@@ -24,7 +24,7 @@ jobs:
           TFVARS_FILE="../../${ENV}/backend.tfvars"
 
           echo "ENV=$ENV" >> $GITHUB_ENV
-          echo "TFVARS_FILE=$TFVARS_FILE"" >> $GITHUB_ENV
+          echo "TFVARS_FILE=$TFVARS_FILE" >> $GITHUB_ENV
           echo "Using TFVARS File: ${{ env.TFVARS_FILE }}"
           echo "env=$ENV" >> $GITHUB_OUTPUT
 
