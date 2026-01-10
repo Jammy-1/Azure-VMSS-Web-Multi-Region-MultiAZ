@@ -17,7 +17,7 @@ vmss_tags = {
 # Storage 
 storage_account_name   = "devtfstatestoragemstf"
 storage_container_name = "devtfstatecontainermstf"
-state_key              = "dev/terraform.tfstate"
+state_key              = "development/terraform.tfstate"
 
 # VNet
 vnet_name          = "vnet-static"
