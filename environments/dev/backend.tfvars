@@ -5,7 +5,7 @@ location            = "uksouth"
 # Storage 
 storage_account_name   = "devtfstatestoragemstf"
 storage_container_name = "devfstatestoragemstf"
-state_key              = "development/terraform.tfstate"
+state_key              = "backend/terraform.tfstate"
 
 # Event Hub 
 eventhub_namespace      = "website-namespace-mstf-development"
@@ -14,7 +14,7 @@ eventhub_auth_rule_name = "event-auth-rule-development"
 
 # Environment Tags
 env_tags = {
-  environment = "development-ackend"
+  environment = "development-backend"
   project     = "development-static-web-site"
   owner       = "development-backend-team"
   cost_center = "development-static-web-site"
