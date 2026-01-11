@@ -321,6 +321,9 @@ jobs:
       - name: Delete Backend Resource Group If Required
         shell: bash
         run: |
+          set +e
+
+          echo "Checking Resource Group Exists: $RG_NAME"
           az group show --name "$RG_NAME" > /dev/null 2>&1
               if [ $? -eq 0 ]; then
                 echo "Resource Group Exists"
