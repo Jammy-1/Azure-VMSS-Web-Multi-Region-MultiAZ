@@ -317,16 +317,23 @@ jobs:
             --tenant ${{ secrets.AZURE_TENANT_ID }}
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Delete Backend Resource Group
+      # Delete RG If Any Errors From State File
+      - name: Delete Backend Resource Group If Required
+        shell: bash
         run: |
-          if az group exists --name "${{ env.RG_NAME }}"; then
-            az group delete \
-              --name "${{ env.RG_NAME }}" \
-              --yes \
-              --no-wait
-          else
-            echo "Resource group already deleted."
-          fi
+          az group show --name "$RG_NAME" > /dev/null 2>&1
+              if [ $? -eq 0 ]; then
+                echo "Resource Group Exists"
+                az group delete \
+                  --name "$RG_NAME" \
+                  --yes \
+                  --no-wait
+                echo "Deleting $RG_NAME ..."
+              else
+                echo "Resource Group $RG_NAME Does Not Exist. Skipping..."
+              fi
+
+              exit 0
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
