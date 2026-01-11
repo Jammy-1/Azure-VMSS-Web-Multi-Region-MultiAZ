@@ -83,7 +83,7 @@ jobs:
         run: ls -l Modules/
 
       # Determine Branch Enviroment - Backend Variables For Deployment - Using Backend TFVARS
-      - name: Determine Branch Environment
+      - name: Determine Branch Environment Variables
         run: |
           BACKEND_FILE="environments/${ENV}/backend.tfvars"
 
