@@ -300,8 +300,8 @@ jobs:
         working-directory: environments/backend
         run: |
           terraform destroy \
-          -var-file=../environments/${ENV}/backend.tfvars -auto-approve \
-          -lock=false || echo "Backend Destroyed - Ignoring State Write Error"
+          -var-file=../${ENV}/backend.tfvars -auto-approve \
+          -lock=false || echo "Skipping State Lock Error"
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
