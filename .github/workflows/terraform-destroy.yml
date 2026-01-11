@@ -44,9 +44,6 @@ jobs:
           echo "TFVARS_FILE=environments/${ENV}/${ENV}.tfvars" >> $GITHUB_ENV
           echo "BACKEND_TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
 
-          echo "Using TFVARS File: ${{ env.TFVARS_FILE }}"
-          echo "Using Backend TFVARS File: ${{ env.BACKEND_TFVARS_FILE }}"
-
         # Set Environment Output
       - name: Set Environment Output
         id: set-env
@@ -162,6 +159,51 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Determine Branch Environment
+        run: |
+          if [ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]; then
+             BRANCH="${GITHUB_REF#refs/heads/}"
+           else
+             BRANCH="${{ github.event.workflow_run.head_branch }}"
+           fi
+
+           case "$BRANCH" in
+             dev)
+               ENV="dev"
+               ;;
+             staging)
+               ENV="staging"
+               ;;
+             main)
+               ENV="production"
+               ;;
+             *)
+               echo "Invalid Target Branch: $BRANCH"
+               exit 1
+               ;;
+           esac
+
+           echo "ENV=$ENV" >> $GITHUB_ENV
+           echo "TFVARS_FILE=environments/${ENV}/backend.tfvars" >> $GITHUB_ENV
+           echo "Environment Detected: $ENV"
+           echo "Using TFVARS File: environments/${ENV}/backend.tfvars"
+
+        # Set Environment Output
+      - name: Set Environment Output
+        id: set-env
+        run: |
+          echo "Environment Detected: $ENV"
+          echo "env=${ENV}" >> $GITHUB_OUTPUT
+
+      # Confirm TFVARS exists
+      - name: Confirm TFVARS File
+        run: |
+          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
+            echo "Unable To Find: ${{ env.TFVARS_FILE }}"
+            exit 1
+          fi
+          echo "Found: ${{ env.TFVARS_FILE }}"
+
       # Load Backend Variables
       - name: Determine Backend Variables
         run: |
@@ -186,22 +228,6 @@ jobs:
             echo "STORAGE_ACCOUNT_NAME=$SA" >> $GITHUB_ENV
             echo "STORAGE_CONTAINER_NAME=$CONTAINER" >> $GITHUB_ENV
             echo "STATE_KEY_BACKEND=$KEY" >> $GITHUB_ENV
-
-      # Set Environment Output
-      - name: Set Environment Output
-        id: set-env
-        run: |
-          echo "Environment Detected: $ENV"
-          echo "env=${ENV}" >> $GITHUB_OUTPUT
-
-      # Confirm TFVARS exists
-      - name: Confirm TFVARS File
-        run: |
-          if [ ! -f "${{ env.TFVARS_FILE }}" ]; then
-            echo "Unable To Find: ${{ env.TFVARS_FILE }}"
-            exit 1
-          fi
-          echo "Found: ${{ env.TFVARS_FILE }}"
 
       # Confirm Backend Variables
       - name: Confirm Backend Variables
