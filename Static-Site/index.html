@@ -21,39 +21,32 @@
             Microsoft Azure.
           </li>
           <li>
-            It automatically deploys a scalable, fault-tolerant web
-            infrastructure that serves content directly from a public GitHub
-            repository.
+            Automatically deploys a scalable, fault-tolerant web infrastructure
+            that serves content from GitHub.
           </li>
           <li>
-            Fully modular Terraform design separating networking, compute and
+            Fully modular Terraform design separating networking, compute, and
             load balancing components.
           </li>
           <li>
-            Designed to be reusable and cost effective - supports rapid
-            deployment across regions, zones and subscriptions.
+            Reusable and cost effective—supports rapid deployment across
+            regions, zones, and subscriptions.
           </li>
           <li>
-            Multi-region deployment configuration using Azure paired regions for
-            increased resilience and disaster recovery.
+            Multi-region deployment using Azure paired regions for increased
+            resilience and disaster recovery.
           </li>
           <li>
-            Virtual Machine Scale Sets are distributed across availability zones
-            where supported, providing zone-level fault tolerance.
+            VM Scale Sets distributed across Availability Zones where supported
+            for zone-level fault tolerance.
           </li>
           <li>
-            Website updates are deployed automatically through GitHub Actions on
-            each push to the main branch, allowing site updates without
-            redeploying infrastructure.
+            Website updates deployed automatically through GitHub Actions on
+            each push to the main branch.
           </li>
           <li>
-            Configuration also ensures each Linux VM is kept up to date with the
-            latest system and package updates during provisioning.
-          </li>
-          <li>
-            Fully automated CI/CD pipelines are implemented using GitHub
-            Actions; Unit tests, Terraform validation, Backend Checks, Backend
-            Bootstrap, Production Deployment & Destruction.
+            Configuration ensures Linux VMs are kept up to date with system and
+            package updates during provisioning.
           </li>
         </ul>
       </section>
@@ -62,153 +55,224 @@
         <h2>Features</h2>
         <ul>
           <li>
-            Creates a dedicated Azure Resource Group to logically isolate all
-            deployed resources.
+            Creates dedicated Azure Resource Group to isolate deployed
+            resources.
           </li>
           <li>
-            Deploys Azure Virtual Networks and subnets per region to support
-            secure and scalable networking.
+            Deploys Azure Virtual Networks and subnets per region for secure,
+            scalable networking.
           </li>
           <li>
-            Implements an Azure Load Balancer with a public frontend IP and
-            backend pool for high availability and traffic distribution.
+            Implements Azure Load Balancer with public frontend IP and backend
+            pool for high availability.
           </li>
           <li>
-            Provisions Azure Virtual Machine Scale Sets (VMSS) across one or
-            more regions for horizontal scalability.
+            Provisions VM Scale Sets across regions for horizontal scalability.
           </li>
           <li>
-            Distributes VM instances across Availability Zones where supported
-            to increase fault tolerance.
+            Distributes VM instances across Availability Zones where supported.
           </li>
           <li>
-            Automatically installs and configures Apache and Git on each Linux
-            VM during initial provisioning.
+            Installs and configures Apache and Git on each Linux VM during
+            provisioning.
           </li>
           <li>
-            Clones static website content from a public GitHub repository during
-            VM bootstrap using cloud-init.
-          </li>
-          <li>
-            Keeps all VM instances up to date by applying system and package
-            updates at provisioning time.
-          </li>
-          <li>
-            Separates infrastructure deployment from application updates to
-            avoid unnecessary VM or scale set redeployments.
-          </li>
-          <li>
-            Uses GitHub Actions to automatically deploy updated website content
-            to all running VMSS instances on each push to the main branch.
-          </li>
-          <li>
-            Executes updates using Azure-native VMSS Run Command, eliminating
-            the need for SSH access or public VM IPs.
-          </li>
-          <li>
-            Supports dynamic discovery of VM Scale Sets within a resource group,
-            enabling updates across multiple regions without manual
-            configuration.
-          </li>
-          <li>
-            Designed to scale to large numbers of VM Scale Sets without
-            requiring additional GitHub secrets or Terraform state access.
-          </li>
-          <li>
-            Outputs key deployment details including resource group name, VMSS
-            IDs, load balancer backend pool IDs and public IP addresses.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Continuous Deployment – Static Site Updates</h2>
-        <ul>
-          <li>
-            Website content is deployed initially during VM provisioning using
+            Clones static website content from GitHub during VM bootstrap using
             cloud-init.
           </li>
+          <li>Maintains VM instances up to date during provisioning.</li>
           <li>
-            Subsequent website updates are handled independently of
-            infrastructure using GitHub Actions.
+            Separates infrastructure deployment from application updates to
+            avoid unnecessary redeployments.
           </li>
           <li>
-            When changes are pushed to the main branch—specifically within the
-            Static Site directory—the website is automatically updated across
-            all VM Scale Set instances.
+            Uses GitHub Actions to deploy updated website content across VMSS
+            instances on each push.
           </li>
           <li>
-            No VM redeployment, scaling event, or Terraform apply is required to
-            update website content.
+            Executes updates using Azure VMSS Run Command—no SSH or public IP
+            required.
           </li>
           <li>
-            Updates are executed using Azure VMSS Run Command, which securely
-            runs update scripts on all instances without requiring public IP
-            access or SSH.
+            Supports dynamic discovery of VM Scale Sets within a Resource Group.
+          </li>
+          <li>
+            Designed to scale to large numbers of VMSS without extra GitHub
+            secrets or Terraform state access.
+          </li>
+          <li>
+            Outputs key deployment details like resource group, VMSS IDs, load
+            balancer backend pool IDs, and public IPs.
           </li>
         </ul>
       </section>
 
       <section>
-        <h2>Infrastructure Overview</h2>
+        <h2>Infrastructure</h2>
         <pre>
 Azure-VMSS-Web-Multi-Region-MultiAZ
 └── Resource Group
     ├── Network Security Groups
-    │   └── Inbound Rules
-    │       ├── Allow HTTP
-    │       └── Allow SSH
-    │
-    ├── Virtual Networks
-    │   ├── VNet (Primary Region)
-    │   │   └── Subnet
-    │   │       └── NSG Association
-    │   └── VNet (Paired Region)
-    │       └── Subnet
-    │           └── NSG Association
-    │
-    ├── Load Balancers
-    │   ├── Public IP
-    │   │   └── Azure Load Balancer (Primary Region)
-    │   │       └── Backend Pool → VMSS (Primary)
-    │   └── Public IP
-    │       └── Azure Load Balancer (Paired Region)
-    │           └── Backend Pool → VMSS (Paired)
-    │
-    ├── Virtual Machine Scale Sets
-    │   ├── VMSS – Primary Region
-    │   │   ├── Availability Zone 1 VM(s)
-    │   │   ├── Availability Zone 2 VM(s)
-    │   │   └── Availability Zone 3 VM(s)
-    │   │
-    │   └── VMSS – Paired Region
-    │       ├── Availability Zone 1 VM(s)
-    │       ├── Availability Zone 2 VM(s)
-    │       └── Availability Zone 3 VM(s)
-    │
+    │   └── Inbound Rules (HTTP/SSH)
+    ├── Virtual Networks & Subnets
+    ├── Load Balancers (Primary & Paired Regions)
+    ├── Virtual Machine Scale Sets (Primary & Paired Regions)
     ├── Automation & CI/CD
-    │   ├── GitHub Actions
-    │   │   ├── Trigger: Pull requests to dev branch
-    │   │   ├── Azure authentication (Service Principal)
-    │   │   ├── Dynamic VMSS discovery (per Resource Group)
-    │   │   └── az vmss run-command invoke
-    │   │       └── Pulls latest static site content from GitHub
-    │   │
+    │   ├── GitHub Actions Workflows
     │   └── Update Script (update_site.sh)
-    │       ├── Git fetch & reset to latest commit
-    │       ├── Copies static site files
-    │       ├── Applies permissions
-    │       └── Restarts Apache
-    │
     └── Static Website Content
         ├── Stored in GitHub Repository
-        ├── Served directly by Apache
-        └── Automatically updated on every push
+        └── Served directly by Apache
         </pre>
       </section>
 
       <section>
-        <h2>Details</h2>
+        <h2>CI/CD Workflows Overview</h2>
+        <p>
+          Multiple GitHub Actions workflows securely manage Terraform
+          infrastructure, backend state, security scanning, and deployment
+          validation across environments. Workflows are chained to ensure safe,
+          controlled infrastructure changes with PR requests.
+        </p>
+      </section>
+
+      <section>
+        <h2>CI/CD Pipeline Overview</h2>
+        <pre>
+├── Automation & CI/CD
+│   ├── GitHub Actions Workflows
+│   │   ├── Static Code Analysis
+│   │   │   ├── TFLint
+│   │   │   ├── Checkov
+│   │   │   └── Terraform format & validation
+│   │   ├── Terraform Plan Validation
+│   │   ├── Backend State Validation
+│   │   ├── Backend Bootstrap (Conditional)
+│   │   ├── Terraform Apply (Controlled)
+│   │   └── Website Content Deployment
+│   └── Update Script (update_site.sh)
+        </pre>
+      </section>
+
+      <section>
+        <h2>
+          1. Static Analysis & Security Checks (Terraform + TFLint + Checkov)
+        </h2>
+        <ul>
+          <li>
+            Terraform Validation:
+            <ul>
+              <li>terraform fmt for consistent formatting</li>
+              <li>
+                terraform validate to check syntax and configuration correctness
+              </li>
+            </ul>
+          </li>
+          <li>
+            TFLint:
+            <ul>
+              <li>
+                Scans Terraform code for best-practice violations and deprecated
+                resources
+              </li>
+              <li>Identifies inefficient or unsafe configurations</li>
+              <li>Enforces Azure-specific rules</li>
+            </ul>
+          </li>
+          <li>
+            Checkov:
+            <ul>
+              <li>Detects insecure resource configurations</li>
+              <li>Enforces policy compliance</li>
+              <li>
+                Checks for missing encryption, logging, and access controls
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <p>
+          If checks fail, the pipeline stops immediately. Only passing pipelines
+          trigger the Plan Validation workflow.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. Plan Validation Workflow</h2>
+        <ul>
+          <li>
+            Detects target environment based on branch (dev, staging, main)
+          </li>
+          <li>Loads environment-specific variables</li>
+          <li>Initializes Terraform with remote backend state</li>
+          <li>Runs terraform plan to validate changes before deployment</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. Backend Check Workflow</h2>
+        <p>
+          Validates Terraform backend configuration before infrastructure
+          changes.
+        </p>
+        <ul>
+          <li>Detect target environment from branch or inputs</li>
+          <li>
+            Configure backend using Resource Group, Storage Account, Container,
+            and State file key
+          </li>
+          <li>Check backend existence and accessibility</li>
+          <li>If missing, triggers Backend Bootstrap workflow</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>4. Backend Bootstrap Workflow</h2>
+        <ul>
+          <li>
+            Creates Terraform backend resources (Resource Group, Storage
+            Account, Blob Container)
+          </li>
+          <li>Assigns correct RBAC</li>
+          <li>Creates Event Hub & Monitoring</li>
+          <li>Migrates local state to remote backend</li>
+          <li>Supports multiple environments using separate state files</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Infrastructure Deployment Workflow</h2>
+        <ul>
+          <li>Terraform initializes using correct remote state</li>
+          <li>Environment-specific variables loaded dynamically</li>
+          <li>Applies infrastructure using terraform apply</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Website Changes Workflow</h2>
+        <ul>
+          <li>
+            Initial content deployed via cloud-init during VM provisioning
+          </li>
+          <li>Triggered on pushes to main branch (Static Site directory)</li>
+          <li>Subsequent updates handled independently using GitHub Actions</li>
+          <li>Authenticates to Azure using a Service Principal</li>
+          <li>
+            Dynamically discovers all VM Scale Sets in the target Resource
+            Group.</li>
+            <li>
+            Executes a shell script on each VMSS using
+            <code>az vmss run-command invoke</code>.
+          </li>
+          </li>
+            Updates all VMSS instances automatically without SSH or
+            public IP access
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Infrastructure Details</h2>
         <ul>
           <li>
             Load Balancer distributes web traffic evenly across all VM
@@ -230,7 +294,7 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
       </section>
 
       <section>
-        <h2>Automated Website Code Deployment</h2>
+        <h2>Automated Website Update Flow</h2>
         <ul>
           <li>
             Terraform provisions the VMSS and installs Apache and Git using
@@ -240,58 +304,20 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
             Initial website content is cloned from GitHub during VM creation.
           </li>
           <li>
-            GitHub Actions workflow is triggered on every pull request targeting
-            the <code>dev</code> branch, specifically for changes in the
-            <code>Static-Site</code> folder:
-            <ul>
-              <li>
-                Dynamically discovers all VM Scale Sets in the target Resource
-                Group.
-              </li>
-              <li>
-                Executes a shell script to pull the latest version of the
-                repository into the web root.
-              </li>
-              <li>Restarts Apache to serve the new content.</li>
-            </ul>
+            GitHub Actions workflow is triggered on every push to the main
+            branch.
           </li>
         </ul>
       </section>
 
       <section>
-        <h2>CI/CD Workflow</h2>
-        <p>
-          Project includes multiple automated workflows to ensure safe, tested,
-          and structured deployments. All workflows currently trigger on pull
-          requests targeting the <code>dev</code> branch.
-        </p>
-
-        <h3>Workflow Sequence</h3>
-        <ol>
-          <li>
-            <strong>Unit Tests</strong> – Validate application code and scripts.
-          </li>
-          <li>
-            <strong>Plan Validation</strong> – Terraform plan validation to
-            check for errors before apply.
-          </li>
-          <li>
-            <strong>Backend Checks</strong> – Verify Terraform backend is
-            configured and accessible.
-          </li>
-          <li>
-            <strong>Bootstrap Backend</strong> – Creates Terraform backend in
-            Azure if not already provisioned.
-          </li>
-          <li>
-            <strong>Production Deployment</strong> – Apply infrastructure
-            changes to the production environment.
-          </li>
-          <li>
-            <strong>Production & Backend Destroy</strong> – Safely tear down
-            infrastructure when required.
-          </li>
-        </ol>
+        <h2>Each VM Performs</h2>
+        <ul>
+          <li>Pulls the latest version of the repository.</li>
+          <li>Copies updated static site files into the Apache web root.</li>
+          <li>Restarts Apache to serve the new content.</li>
+        </ul>
+      </section>
 
       <section>
         <h2>Deployment Instructions</h2>
@@ -299,22 +325,24 @@ Azure-VMSS-Web-Multi-Region-MultiAZ
           <li>
             <strong>Clone this repository:</strong>
             <pre>
-git clone https://github.com/Jammy-1/Azure-VMSS-Web-Multi-Region-MultiAZ
-cd Azure-VMSS-Web-Multi-Region-MultiAZ/
-            </pre>
+git clone https://github.com/Jammy-1/Mastering-Cloud
+cd Mastering-Cloud/1.Projects/Azure-VMSS-Web-Multi-Region-MultiAZ/
+      </pre
+            >
           </li>
           <li>
             <strong>Configure Terraform variables:</strong>
             <pre>
 resource_group_name = "rg-static-website"
-location            = "UK South"
-github_repo         = "https://github.com/your-org/your-repo"
-github_branch       = "main"
-vm_admin_username   = "azureuser"
+location = "UK South"
+github_repo = "https://github.com/your-org/your-repo"
+github_branch = "main"
+vm_admin_username = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
-instance_count      = 2
-vm_size             = "Standard_B2s"
-            </pre>
+instance_count = 2
+vm_size = "Standard_B2s"
+      </pre
+            >
             <p>
               Only public repositories are supported for this configuration.
             </p>
@@ -363,9 +391,5 @@ vm_size             = "Standard_B2s"
         </ul>
       </section>
     </main>
-
-    <footer>
-      <p>&copy; Jammy-1 Azure-VMSS-Web-Multi-Region-MultiAZ</p>
-    </footer>
   </body>
 </html>
