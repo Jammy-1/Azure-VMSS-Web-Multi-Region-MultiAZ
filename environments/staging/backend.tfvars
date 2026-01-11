@@ -5,7 +5,8 @@ location            = "uksouth"
 # Storage 
 storage_account_name   = "stagetfstatestoragemstf"
 storage_container_name = "stagetfstatestoragemstf"
-state_key              = "staging/terraform.tfstate"
+state_key_backend      = "backend/terraform.tfstate"
+state_key_deployment   = "staging/terraform.tfstate"
 
 # Event Hub 
 eventhub_namespace      = "website-namespace-mstf-staging"
